@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, LogOut, Settings, Calendar, Users, Bell } from 'lucide-react';
+import { Plus, Trash2, LogOut, Settings, Calendar, Bell } from 'lucide-react';
 import { ProjectService } from '../services/projects';
 import { Project, UserProfile } from '../types';
 import { AuthService } from '../services/auth';
@@ -73,6 +73,7 @@ export const Dashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       await AuthService.logout();
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -80,16 +81,16 @@ export const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
-  const canCreateProject = userProfile?.is_premium || projects.length === 0;
+  const canCreateProject = projects.length === 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -99,12 +100,6 @@ export const Dashboard: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {userProfile?.is_premium && (
-                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white">
-                  Premium
-                </span>
-              )}
-              
               <div className="relative">
                 <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full">
                   <span className="sr-only">View notifications</span>
@@ -134,28 +129,20 @@ export const Dashboard: React.FC = () => {
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
               <p className="mt-1 text-sm text-gray-500">
-                {userProfile?.is_premium 
-                  ? 'Premium account: Unlimited projects and timetables' 
-                  : 'Free account: 1 project with up to 3 timetables'}
+                Create and manage your bus timetable projects
               </p>
             </div>
             
             {!canCreateProject ? (
-              <div className="mt-4 sm:mt-0 flex flex-col sm:items-end">
+              <div className="mt-4 sm:mt-0 flex">
                 <button
                   className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md flex items-center gap-2 cursor-not-allowed"
                   disabled
-                  title="Free users can only create one project"
+                  title="You can only create one project"
                 >
                   <Plus size={20} />
                   New Project
                 </button>
-                <a 
-                  href="#upgrade" 
-                  className="mt-2 text-sm text-orange-600 hover:text-orange-700"
-                >
-                  Upgrade to Premium
-                </a>
               </div>
             ) : (
               <button
@@ -221,47 +208,6 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {!userProfile?.is_premium && (
-          <div id="upgrade" className="mt-12 bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-6 py-8 bg-gradient-to-r from-orange-500 to-amber-500 sm:p-10 sm:pb-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-white/20 rounded-full p-3">
-                  <Users className="h-6 w-6 text-white" aria-hidden="true" />
-                </div>
-                <div className="ml-5">
-                  <h3 className="text-xl font-semibold text-white">Upgrade to Premium</h3>
-                  <p className="text-orange-50 mt-1">Get unlimited projects and timetables</p>
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-orange-100 bg-orange-50 px-6 py-6 sm:px-10 sm:py-6">
-              <div className="sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <ul className="mt-3 space-y-2">
-                    <li className="flex items-center">
-                      <span className="h-5 w-5 text-orange-500 mr-2">✓</span>
-                      <span className="text-gray-700">Unlimited projects</span>
-                    </li>
-                    <li className="flex items-center">
-                      <span className="h-5 w-5 text-orange-500 mr-2">✓</span>
-                      <span className="text-gray-700">Unlimited timetables per project</span>
-                    </li>
-                    <li className="flex items-center">
-                      <span className="h-5 w-5 text-orange-500 mr-2">✓</span>
-                      <span className="text-gray-700">Priority support</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-6 sm:mt-0 sm:ml-6">
-                  <button className="w-full flex justify-center py-2.5 px-5 border border-transparent rounded-md shadow-sm text-sm font-medium text-orange-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                    Upgrade Now
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
