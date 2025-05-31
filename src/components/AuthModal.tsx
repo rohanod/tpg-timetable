@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { AuthService } from '../services/auth';
-import { supabase } from '../services/auth';
+import { AuthService, supabase } from '../services/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,23 +15,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const handleAuthStateChange = async (event: any) => {
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
+      console.log('Auth state changed:', event);
+      
       if (event === 'SIGNED_IN') {
         setIsLoading(true);
         try {
           await AuthService.getUserProfile();
           onClose();
-          // Force a full page reload to ensure clean state
+          console.log('User signed in, redirecting to dashboard');
           window.location.href = '/dashboard';
         } catch (error) {
           console.error('Error handling sign in:', error);
-        } finally {
           setIsLoading(false);
         }
       }
-    };
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    });
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -60,7 +59,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
@@ -177,7 +176,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center text-sm">
                 {authView === 'sign_in' ? (
                   <>
-                    <a href="#forgot\" className="text-orange-600 hover:text-orange-700">
+                    <a href="#forgot" className="text-orange-600 hover:text-orange-700">
                       Forgot your password?
                     </a>
                     <div className="mt-2">

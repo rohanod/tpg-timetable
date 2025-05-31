@@ -16,7 +16,10 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('Checking auth status...');
         const authenticated = await AuthService.isAuthenticated();
+        console.log('Auth status:', authenticated ? 'authenticated' : 'not authenticated');
+        
         setIsAuthenticated(authenticated);
         if (!authenticated) {
           setShowAuthModal(true);
@@ -72,16 +75,16 @@ function App() {
         )}
 
         <Routes>
-          {/* Auth callback route */}
+          {/* Auth callback route - accessible to all */}
           <Route path="/auth/callback" element={<AuthCallback />} />
           
           {/* Protected routes */}
           {isAuthenticated ? (
             <>
-              <Route path="/dashboard\" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/project/:projectId" element={<ProjectEditor />} />
-              <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>
           ) : (
             <>
@@ -109,7 +112,7 @@ function App() {
                   </div>
                 </div>
               } />
-              <Route path="*" element={<Navigate to="/\" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
         </Routes>

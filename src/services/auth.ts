@@ -2,13 +2,15 @@ import { createClient } from '@supabase/supabase-js';
 import { toast } from 'react-hot-toast';
 import { UserProfile } from '../types';
 
+// Get environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables');
 }
 
+// Create Supabase client with persistent storage
 export const supabase = createClient(
   supabaseUrl || 'https://your-project.supabase.co',
   supabaseKey || 'your-anon-key',
@@ -17,37 +19,32 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey: 'tpg-auth-storage-key' // Custom storage key to avoid conflicts
+      storage: localStorage,
+      storageKey: 'tpg-auth-storage-key'
     }
   }
 );
 
-export interface User {
-  id: string;
-  email: string;
-}
-
 export const AuthService = {
-  currentUser: null as User | null,
-  
+  // Check if user is authenticated
   isAuthenticated: async (): Promise<boolean> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      return !!session;
+      const { data } = await supabase.auth.getSession();
+      return !!data.session;
     } catch (error) {
       console.error('Auth check failed:', error);
       return false;
     }
   },
 
+  // Get the current user's profile
   getUserProfile: async (): Promise<UserProfile | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
+      const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) return null;
 
-      // First check if the profile exists
+      // Check if the profile exists
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -85,6 +82,7 @@ export const AuthService = {
     }
   },
   
+  // Email/Password login
   login: async (email: string, password: string): Promise<void> => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -97,9 +95,9 @@ export const AuthService = {
     }
     
     toast.success('Welcome back!');
-    window.location.href = '/dashboard';
   },
   
+  // Email/Password registration
   register: async (email: string, password: string): Promise<void> => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -117,6 +115,7 @@ export const AuthService = {
     toast.success('Check your email to confirm your account!');
   },
   
+  // Sign out
   logout: async (): Promise<void> => {
     const { error } = await supabase.auth.signOut();
     
