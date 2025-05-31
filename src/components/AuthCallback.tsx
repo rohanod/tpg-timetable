@@ -11,8 +11,7 @@ export const AuthCallback = () => {
       try {
         console.log("Auth callback component mounted");
         
-        // This will automatically extract the auth tokens from the URL
-        // and establish a session
+        // Get auth data from the session (tokens already extracted from URL by Supabase)
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -21,15 +20,22 @@ export const AuthCallback = () => {
           return;
         }
         
-        if (data?.session) {
-          console.log("Auth successful, redirecting to dashboard");
-          // If we have a session, redirect to dashboard
-          navigate('/dashboard', { replace: true });
-        } else {
-          console.log("No session found, redirecting to home");
-          // If no session, go back to the homepage
-          navigate('/', { replace: true });
+        // Important: Clear the URL of sensitive tokens before proceeding
+        // This helps prevent the security error
+        if (window.location.hash) {
+          // Use the clean navigate approach instead of directly manipulating history
+          navigate('/auth/callback', { replace: true });
         }
+        
+        setTimeout(() => {
+          if (data?.session) {
+            console.log("Auth successful, redirecting to dashboard");
+            navigate('/dashboard', { replace: true });
+          } else {
+            console.log("No session found, redirecting to home");
+            navigate('/', { replace: true });
+          }
+        }, 100); // Small timeout to ensure URL is cleaned before redirect
       } catch (err) {
         console.error('Error processing auth callback:', err);
         setError('Failed to complete authentication. Please try again.');
