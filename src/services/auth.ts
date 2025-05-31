@@ -87,11 +87,7 @@ export const AuthService = {
     }
     
     toast.success('Welcome back!');
-    
-    // Use a slight delay to prevent immediate refreshes
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 500);
+    window.location.reload();
   },
   
   register: async (email: string, password: string): Promise<void> => {
@@ -120,10 +116,6 @@ export const AuthService = {
     }
     
     toast.success('Logged out successfully');
-    
-    // Use a slight delay to prevent immediate refreshes
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 300);
+    window.location.href = '/';
   }
 };

@@ -13,40 +13,28 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [authView, setAuthView] = useState<'sign_in' | 'sign_up'>('sign_in');
-  
-  // Use a ref to track if this is the first mount
-  const isFirstMount = React.useRef(true);
 
   useEffect(() => {
-    const handleAuthStateChange = (event: any) => {
+    const handleAuthStateChange = async (event: any) => {
       if (event === 'SIGNED_IN') {
         setIsLoading(true);
-        // Add a slight delay before redirecting to prevent immediate refresh
-        setTimeout(async () => {
-          try {
-            await AuthService.getUserProfile();
-            onClose();
-            window.location.href = '/dashboard';
-          } catch (error) {
-            console.error('Error handling sign in:', error);
-          } finally {
-            setIsLoading(false);
-          }
-        }, 500);
+        try {
+          await AuthService.getUserProfile();
+          onClose();
+          window.location.href = '/dashboard';
+        } catch (error) {
+          console.error('Error handling sign in:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
     };
 
-    // Only set up the listener if this isn't the first render
-    // This prevents the listener from firing on initial mount
-    if (!isFirstMount.current) {
-      const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-      
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
-    } else {
-      isFirstMount.current = false;
-    }
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [onClose]);
 
   if (!isOpen) return null;
@@ -126,7 +114,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="px-6 py-4 bg-gray-50 text-center text-sm text-gray-600">
-          By signing up, you agree to our <a href="/terms.html" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Terms of Service</a> and <a href="/privacy.html" target=\"_blank" rel="noopener noreferrer\" className="text-orange-600 hover:underline">Privacy Policy</a>
+          By signing up, you agree to our Terms of Service and Privacy Policy
         </div>
       </div>
     </div>
