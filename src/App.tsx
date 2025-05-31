@@ -74,8 +74,8 @@ function App() {
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard\" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard\" replace />} />
           </Routes>
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
