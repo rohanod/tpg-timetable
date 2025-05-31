@@ -5,7 +5,7 @@ import { ProjectEditor } from './components/ProjectEditor';
 import { AuthModal } from './components/AuthModal';
 import { AuthService } from './services/auth';
 import { Toaster } from 'react-hot-toast';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, Calendar } from 'lucide-react';
 
 function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -41,7 +41,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
@@ -49,12 +49,15 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-white flex flex-col">
         {!isAuthenticated && (
           <div className="bg-white shadow-sm print:hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
-                <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
+                <div className="flex items-center">
+                  <Calendar className="h-8 w-8 text-orange-500 mr-2" />
+                  <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
+                </div>
                 <button
                   onClick={() => setShowAuthModal(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -71,12 +74,15 @@ function App() {
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
-            <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="text-center max-w-md">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4">
+                <Calendar className="h-6 w-6 text-orange-600" />
+              </div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Welcome to Bus Timetable Generator</h2>
               <p className="text-gray-600 mb-6">
                 Create beautiful, printable timetables for bus and tram stops. Sign in to get started.
@@ -98,7 +104,16 @@ function App() {
           </div>
         )}
         
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => {
+            setShowAuthModal(false);
+            // Check if the user is authenticated after the modal is closed
+            AuthService.isAuthenticated().then(authenticated => {
+              setIsAuthenticated(authenticated);
+            });
+          }} 
+        />
         <Toaster position="top-right" />
       </div>
     </Router>

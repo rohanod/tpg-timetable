@@ -126,10 +126,13 @@ export const ProjectService = {
       throw new Error('Free users can only create three timetables per project. Upgrade to premium for unlimited timetables.');
     }
 
+    // Omit any potential id from the timetable object to let Supabase generate a UUID
+    const { id, ...timetableWithoutId } = timetable as any;
+
     const { data, error } = await supabase
       .from('timetables')
       .insert([
-        { ...timetable, project_id: projectId }
+        { ...timetableWithoutId, project_id: projectId }
       ])
       .select()
       .single();

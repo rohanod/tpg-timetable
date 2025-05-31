@@ -87,7 +87,7 @@ export const AuthService = {
     }
     
     toast.success('Welcome back!');
-    window.location.reload();
+    window.location.href = '/dashboard';
   },
   
   register: async (email: string, password: string): Promise<void> => {

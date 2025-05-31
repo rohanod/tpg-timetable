@@ -92,18 +92,41 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
           return;
         }
         
+        // Create a temporary ID for the UI
+        const tempId = `temp-${Date.now()}`;
+        
         const newPage = {
-          id: `page-${Date.now()}`,
           stopName: 'Select a stop...',
           stopId: '',
-          theme: 'color',
+          theme: 'color' as const,
           data: []
         };
         
-        addTimetablePage(newPage);
-        await ProjectService.addTimetable(projectId, newPage);
+        // Add to UI with temporary ID first
+        addTimetablePage({
+          ...newPage,
+          id: tempId
+        });
+        
+        // Create in database and get real ID
+        const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
+        
+        // Update the temporary ID with the real UUID from the server
+        if (savedTimetable) {
+          // Replace the temporary timetable with the one from the server
+          setTimetablePages(prev => 
+            prev.map(page => 
+              page.id === tempId ? 
+                { ...page, id: savedTimetable.id } : 
+                page
+            )
+          );
+          
+          // Also update filtered data with the new ID
+          updateFilteredData(savedTimetable.id, []);
+        }
       } catch (error: any) {
-        toast.error(error.message);
+        toast.error(error.message || 'Failed to create timetable');
       }
     } else {
       addTimetablePage();

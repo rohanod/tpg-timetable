@@ -45,7 +45,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const addTimetablePage = (data?: TimetablePageData) => {
     const newPage: TimetablePageData = data || {
-      id: `page-${Date.now()}`,
+      id: `temp-${Date.now()}`,
       stopName: 'Select a stop...',
       stopId: '',
       theme: 'color',
@@ -73,6 +73,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setTimetablePages(prev => 
       prev.map(page => (page.id === id ? { ...page, ...data } : page))
     );
+    
+    // If the data field is updated, also update the filteredData
+    if (data.data) {
+      updateFilteredData(id, data.data);
+    }
   };
 
   const updateFilteredData = (id: string, data: StopSchedule[]) => {

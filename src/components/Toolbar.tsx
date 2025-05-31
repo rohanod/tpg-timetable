@@ -44,7 +44,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
 
   const checkTimetableLimit = async () => {
     try {
-      const profile = await ProjectService.getProject(projectId as string);
       const { data: userProfile } = await ProjectService.getUserPermissions();
       
       if (!userProfile.is_premium && timetablePages.length >= 3) {
@@ -85,8 +84,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     const targetPage = selectedTimetable || (timetablePages.length === 0 ? null : timetablePages[timetablePages.length - 1].id);
     
     if (!targetPage) {
+      // When creating a new standalone timetable (not connected to a project)
       addTimetablePage({
-        id: `page-${Date.now()}`,
+        id: `temp-${Date.now()}`,
         stopName: stop.label,
         stopId: stop.id || '',
         theme: 'color',
@@ -115,7 +115,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
         // Update in database if we're in a project
         await ProjectService.updateTimetable(targetPage, {
           stopName: stop.label,
-          stopId: stop.id || ''
+          stopId: stop.id || '',
+          data: scheduleData
         });
       }
     } catch (error) {
@@ -186,6 +187,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       });
       
       updateFilteredData(selectedTimetable, scheduleData);
+
+      if (projectId) {
+        // Update in database if we're in a project
+        await ProjectService.updateTimetable(selectedTimetable, {
+          data: scheduleData
+        });
+      }
     } catch (error) {
       console.error('Error updating schedule:', error);
     } finally {
@@ -199,28 +207,49 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       return;
     }
     
-    if (timetablePages.length > 0 && timetablePages.some(page => page.stopName !== 'Select a stop...')) {
-      const newPage = {
-        id: `page-${Date.now()}`,
-        stopName: 'Select a stop...',
-        stopId: '',
-        theme: 'color',
-        data: []
-      };
-      
-      addTimetablePage(newPage);
-      
-      if (projectId) {
-        try {
-          await ProjectService.addTimetable(projectId, newPage);
-        } catch (error: any) {
-          toast.error(error.message);
+    if (projectId) {
+      try {
+        const newPage = {
+          stopName: 'Select a stop...',
+          stopId: '',
+          theme: 'color' as const,
+          data: []
+        };
+        
+        // Create a temporary ID for UI
+        const tempId = `temp-${Date.now()}`;
+        
+        // Add to UI with temporary ID first
+        addTimetablePage({
+          ...newPage,
+          id: tempId
+        });
+        
+        // Create in database and get real ID
+        const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
+        
+        // Update the temporary ID with the real UUID from the server
+        if (savedTimetable) {
+          // Replace the temporary timetable with the one from the server
+          setTimetablePages(prev => 
+            prev.map(page => 
+              page.id === tempId ? 
+                { ...page, id: savedTimetable.id } : 
+                page
+            )
+          );
+          
+          // Also update filtered data with the new ID
+          updateFilteredData(savedTimetable.id, []);
         }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to create timetable');
       }
     } else {
+      // For standalone mode, just create a demo timetable
       const demoData = getDemoSchedule('Bouchet');
       const newPage = {
-        id: `page-${Date.now()}`,
+        id: `temp-${Date.now()}`,
         stopName: 'Bouchet',
         stopId: 'bouchet',
         theme: 'color',
@@ -228,14 +257,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       };
       
       addTimetablePage(newPage);
-      
-      if (projectId) {
-        try {
-          await ProjectService.addTimetable(projectId, newPage);
-        } catch (error: any) {
-          toast.error(error.message);
-        }
-      }
     }
   };
 
