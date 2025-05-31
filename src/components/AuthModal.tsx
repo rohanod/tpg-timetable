@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { AuthService } from '../services/auth';
 import { supabase } from '../services/auth';
+import { Link } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -206,7 +207,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="px-6 py-4 bg-gray-50 text-center text-sm text-gray-600">
-          By signing up, you agree to our Terms of Service and Privacy Policy
+          By signing up, you agree to our <Link to="/terms" className="text-orange-600 hover:text-orange-700">Terms of Service</Link> and <Link to="/privacy" className="text-orange-600 hover:text-orange-700">Privacy Policy</Link>
         </div>
       </div>
     </div>

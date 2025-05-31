@@ -58,19 +58,13 @@ export const ProjectService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('is_premium')
-      .eq('id', user.id)
-      .single();
-
     const { data: existingProjects } = await supabase
       .from('projects')
       .select('id')
       .eq('user_id', user.id);
 
-    if (!userProfile.is_premium && existingProjects && existingProjects.length >= 1) {
-      throw new Error('Free users can only create one project. Upgrade to premium for unlimited projects.');
+    if (existingProjects && existingProjects.length >= 1) {
+      throw new Error('You can only create one project.');
     }
 
     const { data, error } = await supabase
@@ -105,25 +99,13 @@ export const ProjectService = {
   },
 
   async addTimetable(projectId: string, timetable: Omit<TimetablePageData, 'id'>): Promise<Timetable> {
-    const { data: project } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', projectId)
-      .single();
-
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('is_premium')
-      .eq('id', project.user_id)
-      .single();
-
     const { data: existingTimetables } = await supabase
       .from('timetables')
       .select('id')
       .eq('project_id', projectId);
 
-    if (!userProfile.is_premium && existingTimetables && existingTimetables.length >= 3) {
-      throw new Error('Free users can only create three timetables per project. Upgrade to premium for unlimited timetables.');
+    if (existingTimetables && existingTimetables.length >= 3) {
+      throw new Error('You can only create three timetables per project.');
     }
 
     // Omit any potential id from the timetable object to let Supabase generate a UUID

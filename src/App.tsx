@@ -6,6 +6,8 @@ import { AuthModal } from './components/AuthModal';
 import { AuthService } from './services/auth';
 import { Toaster } from 'react-hot-toast';
 import { UserCircle, Calendar } from 'lucide-react';
+import { Terms } from './components/Terms';
+import { Privacy } from './components/Privacy';
 
 function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -74,34 +76,40 @@ function App() {
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/" element={<Navigate to="/dashboard\" replace />} />
             <Route path="*" element={<Navigate to="/dashboard\" replace />} />
           </Routes>
         ) : (
-          <div className="flex-1 flex items-center justify-center p-4">
-            <div className="text-center max-w-md">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4">
-                <Calendar className="h-6 w-6 text-orange-600" />
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Welcome to Bus Timetable Generator</h2>
-              <p className="text-gray-600 mb-6">
-                Create beautiful, printable timetables for bus and tram stops. Sign in to get started.
-              </p>
-              <div className="flex flex-col space-y-4">
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors w-full"
-                >
-                  Sign In to Continue
-                </button>
-                <div className="text-sm text-gray-500">
-                  Free accounts can create 1 project with up to 3 timetables. 
-                  <br />
-                  Premium accounts get unlimited projects and timetables.
+          <Routes>
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={
+              <div className="flex-1 flex items-center justify-center p-4">
+                <div className="text-center max-w-md">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4">
+                    <Calendar className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">Welcome to Bus Timetable Generator</h2>
+                  <p className="text-gray-600 mb-6">
+                    Create beautiful, printable timetables for bus and tram stops. Sign in to get started.
+                  </p>
+                  <div className="flex flex-col space-y-4">
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors w-full"
+                    >
+                      Sign In to Continue
+                    </button>
+                    <div className="text-sm text-gray-500">
+                      Free accounts can create 1 project with up to 3 timetables. 
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            } />
+          </Routes>
         )}
         
         <AuthModal 
