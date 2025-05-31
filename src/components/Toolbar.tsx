@@ -22,8 +22,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     setTimeFilter,
     selectedTimetable,
     updateTimetablePage,
-    updateFilteredData,
-    setTimetablePages
+    updateFilteredData
   } = useAppContext();
   
   const [stopSuggestions, setStopSuggestions] = useState<StopSuggestion[]>([]);
@@ -47,7 +46,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     try {
       const { data: userProfile } = await ProjectService.getUserPermissions();
       
-      if (timetablePages.length >= 3) {
+      if (!userProfile.is_premium && timetablePages.length >= 3) {
         setUserCanAddTimetable(false);
       } else {
         setUserCanAddTimetable(true);
@@ -204,7 +203,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
 
   const handleNewPage = async () => {
     if (!userCanAddTimetable && projectId) {
-      toast.error('You can only create up to 3 timetables per project.');
+      toast.error('Free users can only create up to 3 timetables per project. Upgrade to premium for unlimited timetables.');
       return;
     }
     
@@ -311,7 +310,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
             onClick={handleNewPage}
             className={`px-3 py-2 ${!userCanAddTimetable ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'} text-white rounded-md text-sm flex items-center gap-1.5 transition-colors`}
             disabled={!userCanAddTimetable}
-            title={!userCanAddTimetable ? 'You can only create 3 timetables' : 'Add new timetable'}
+            title={!userCanAddTimetable ? 'Free users can only create 3 timetables' : 'Add new timetable'}
           >
             <Plus size={18} /> New Timetable
           </button>
