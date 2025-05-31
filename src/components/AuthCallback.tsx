@@ -8,12 +8,12 @@ export const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // Get the URL hash
-      const hash = window.location.hash;
-      
       try {
+        // Get the current URL hash - this contains the token information
+        const hash = window.location.hash;
+        console.log("Processing auth callback with hash:", hash ? "Hash present" : "No hash");
+        
         // Process the callback from Supabase Auth
-        // This will set the session in the browser
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -23,9 +23,11 @@ export const AuthCallback = () => {
         }
         
         if (data?.session) {
+          console.log("Auth successful, redirecting to dashboard");
           // If we have a session, redirect to dashboard
           navigate('/dashboard', { replace: true });
         } else {
+          console.log("No session found, redirecting to home");
           // If no session, go back to the homepage
           navigate('/', { replace: true });
         }
