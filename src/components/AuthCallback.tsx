@@ -11,7 +11,13 @@ export const AuthCallback = () => {
       try {
         console.log("Auth callback component mounted");
         
-        // Get auth data from the session (tokens already extracted from URL by Supabase)
+        // First, clear URL hash to prevent security issues
+        if (window.location.hash) {
+          // Replace the current URL without the hash
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        
+        // Process the session after clearing hash
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -20,22 +26,17 @@ export const AuthCallback = () => {
           return;
         }
         
-        // Important: Clear the URL of sensitive tokens before proceeding
-        // This helps prevent the security error
-        if (window.location.hash) {
-          // Use the clean navigate approach instead of directly manipulating history
-          navigate('/auth/callback', { replace: true });
-        }
-        
+        // Short delay to ensure browser state is settled
         setTimeout(() => {
           if (data?.session) {
             console.log("Auth successful, redirecting to dashboard");
-            navigate('/dashboard', { replace: true });
+            // Use window.location for a full page navigation to avoid history issues
+            window.location.href = '/dashboard';
           } else {
             console.log("No session found, redirecting to home");
-            navigate('/', { replace: true });
+            window.location.href = '/';
           }
-        }, 100); // Small timeout to ensure URL is cleaned before redirect
+        }, 200);
       } catch (err) {
         console.error('Error processing auth callback:', err);
         setError('Failed to complete authentication. Please try again.');
