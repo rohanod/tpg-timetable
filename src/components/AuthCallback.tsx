@@ -3,40 +3,32 @@ import { supabase } from '../services/auth';
 
 export const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
-  const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Auth callback component mounted");
+        console.log("Processing authentication...");
         
-        // Clear hash immediately to prevent security issues
-        if (window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname);
-        }
-        
-        // Get the session
+        // Get the session (this will automatically process the URL)
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error in auth callback:', error);
+          console.error('Auth error:', error);
           setError(error.message);
-          setProcessing(false);
           return;
         }
         
-        // Redirect based on auth status
         if (data?.session) {
-          console.log("Auth successful, redirecting to dashboard");
+          console.log("Auth successful, redirecting");
+          // Use direct navigation instead of React Router to avoid state issues
           window.location.href = '/dashboard';
         } else {
-          console.log("No session found, redirecting to home");
+          console.log("No session found");
           window.location.href = '/';
         }
       } catch (err) {
-        console.error('Error processing auth callback:', err);
-        setError('Failed to complete authentication. Please try again.');
-        setProcessing(false);
+        console.error('Unexpected error:', err);
+        setError('Authentication failed. Please try again.');
       }
     };
 
@@ -60,16 +52,12 @@ export const AuthCallback = () => {
     );
   }
 
-  if (processing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Completing authentication...</p>
-        </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Completing authentication...</p>
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 };

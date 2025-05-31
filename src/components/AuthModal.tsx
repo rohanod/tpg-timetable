@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { AuthService, supabase } from '../services/auth';
+import { supabase, AuthService } from '../services/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,30 +14,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
-      console.log('Auth state changed:', event);
-      
-      if (event === 'SIGNED_IN') {
-        setIsLoading(true);
-        try {
-          await AuthService.getUserProfile();
-          onClose();
-          console.log('User signed in, redirecting to dashboard');
-          window.location.href = '/dashboard';
-        } catch (error) {
-          console.error('Error handling sign in:', error);
-          setIsLoading(false);
-        }
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [onClose]);
-
   const handleEmailPasswordAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -49,8 +25,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       } else {
         await AuthService.register(email, password);
       }
+      onClose();
     } catch (error: any) {
-      setError(error.message || 'An error occurred during authentication');
+      setError(error.message || 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -59,14 +36,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       });
-      
-      if (error) throw error;
+      // Don't set loading to false here as we're redirecting
     } catch (error: any) {
       setError(error.message || 'An error occurred with Google sign in');
       setIsLoading(false);
@@ -165,10 +141,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     disabled={isLoading}
                     className="w-full px-4 py-2.5 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
                   >
-                    {isLoading ? 
-                      (authView === 'sign_in' ? 'Signing in...' : 'Signing up...') : 
-                      (authView === 'sign_in' ? 'Sign in' : 'Sign up')
-                    }
+                    {authView === 'sign_in' ? 'Sign in' : 'Sign up'}
                   </button>
                 </div>
               </form>
@@ -176,7 +149,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center text-sm">
                 {authView === 'sign_in' ? (
                   <>
-                    <a href="#forgot\" className="text-orange-600 hover:text-orange-700">
+                    <a href="#forgot" className="text-orange-600 hover:text-orange-700">
                       Forgot your password?
                     </a>
                     <div className="mt-2">

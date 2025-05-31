@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, LogOut, Settings, Calendar, Bell } from 'lucide-react';
+import { Plus, Trash2, LogOut, Calendar } from 'lucide-react';
 import { ProjectService } from '../services/projects';
 import { Project, UserProfile } from '../types';
 import { AuthService } from '../services/auth';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -12,7 +11,6 @@ export const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newProjectName, setNewProjectName] = useState('');
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -22,7 +20,7 @@ export const Dashboard: React.FC = () => {
     try {
       const isAuth = await AuthService.isAuthenticated();
       if (!isAuth) {
-        navigate('/');
+        window.location.href = '/';
         return;
       }
 
@@ -73,7 +71,7 @@ export const Dashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       await AuthService.logout();
-      navigate('/');
+      // Redirect is handled in the service
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -99,25 +97,14 @@ export const Dashboard: React.FC = () => {
               <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full">
-                  <span className="sr-only">View notifications</span>
-                  <Bell className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <div className="border-l border-gray-200 h-6 mx-2"></div>
-              
-              <div className="flex items-center">
-                <button
-                  onClick={handleLogout}
-                  className="ml-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <LogOut size={18} />
-                  Sign Out
-                </button>
-              </div>
+            <div className="flex items-center">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                <LogOut size={18} />
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
@@ -197,13 +184,12 @@ export const Dashboard: React.FC = () => {
                     Created on {new Date(project.created_at).toLocaleDateString()}
                   </p>
                   <div className="mt-5">
-                    <button
-                      onClick={() => navigate(`/project/${project.id}`)}
+                    <a
+                      href={`/project/${project.id}`}
                       className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                     >
-                      <Settings className="-ml-1 mr-2 h-5 w-5" />
                       Open Project
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>

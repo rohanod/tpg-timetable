@@ -10,19 +10,10 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase environment variables');
 }
 
-// Create Supabase client with persistent storage
+// Create Supabase client with simple configuration
 export const supabase = createClient(
   supabaseUrl || 'https://your-project.supabase.co',
-  supabaseKey || 'your-anon-key',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storage: localStorage,
-      storageKey: 'tpg-auth-storage-key'
-    }
-  }
+  supabaseKey || 'your-anon-key'
 );
 
 export const AuthService = {
@@ -94,17 +85,15 @@ export const AuthService = {
       throw error;
     }
     
-    toast.success('Welcome back!');
+    toast.success('Logged in successfully!');
+    window.location.href = '/dashboard';
   },
   
   // Email/Password registration
   register: async (email: string, password: string): Promise<void> => {
     const { error } = await supabase.auth.signUp({
       email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
+      password
     });
     
     if (error) {

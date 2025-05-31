@@ -16,9 +16,7 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('Checking auth status...');
         const authenticated = await AuthService.isAuthenticated();
-        console.log('Auth status:', authenticated ? 'authenticated' : 'not authenticated');
         
         setIsAuthenticated(authenticated);
         if (!authenticated) {
@@ -30,14 +28,14 @@ function App() {
         setIsLoading(false);
       }
     };
+    
     checkAuth();
   }, []);
 
   const handleLogout = async () => {
     try {
       await AuthService.logout();
-      setIsAuthenticated(false);
-      setShowAuthModal(true);
+      // Redirect is handled in the service
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -81,10 +79,10 @@ function App() {
           {/* Protected routes */}
           {isAuthenticated ? (
             <>
-              <Route path="/dashboard\" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/project/:projectId" element={<ProjectEditor />} />
-              <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>
           ) : (
             <>
@@ -112,7 +110,7 @@ function App() {
                   </div>
                 </div>
               } />
-              <Route path="*" element={<Navigate to="/\" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
         </Routes>
@@ -124,6 +122,9 @@ function App() {
             // Check if the user is authenticated after the modal is closed
             AuthService.isAuthenticated().then(authenticated => {
               setIsAuthenticated(authenticated);
+              if (authenticated) {
+                window.location.href = '/dashboard';
+              }
             });
           }} 
         />
