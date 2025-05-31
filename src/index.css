@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print styles */
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+body.printing-active > .app-container {
+  display: none !important;
+}
+
+body.printing-active > #printArea {
+  display: block !important;
+}
+
+@media print {
+  html, body {
+    width: 100%;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  #printArea .timetable-page-print {
+    width: 100% !important;
+    height: auto;
+    border: 1px solid black !important;
+    margin: 0 0 10mm 0 !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: hidden;
+    max-height: calc(100vh - 20mm) !important;
+  }
+  
+  #printArea .timetable-page-print:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  #printArea .stop-title-print {
+    background-color: transparent !important;
+    color: black !important;
+    font-size: 16pt !important;
+    padding: 10px !important;
+    border-bottom: 1px solid #aaa !important;
+    text-align: center;
+  }
+  
+  #printArea .table-print {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  #printArea .table-print tbody {
+    max-height: calc(100vh - 150mm) !important;
+    overflow: hidden !important;
+  }
+
+  #printArea .table-print tr:nth-child(n+12) {
+    display: none !important;
+  }
+  
+  #printArea .table-print th,
+  #printArea .table-print td {
+    text-align: center;
+  }
+  
+  #printArea .table-print th:nth-child(1),
+  #printArea .table-print td:nth-child(1) {
+    width: 25% !important;
+  }
+  
+  #printArea .table-print th:nth-child(2),
+  #printArea .table-print td:nth-child(2) {
+    width: 15% !important;
+  }
+  
+  #printArea .table-print th:nth-child(3), 
+  #printArea .table-print td:nth-child(3) {
+    width: 60% !important;
+    text-align: left;
+  }
+  
+  #printArea .print-color-active .th-print {
+    background-color: #FF5A00 !important;
+    color: white !important;
+  }
+  
+  #printArea .print-bw-active .th-print {
+    background-color: #333333 !important;
+    color: white !important;
+  }
+  
+  #printArea .print-color-active .td-print,
+  #printArea .print-color-active .watermark-print {
+    color: #333333 !important;
+  }
+  
+  #printArea .print-color-active .table-print,
+  #printArea .print-color-active .th-print,
+  #printArea .print-color-active .td-print {
+    border-color: #CCCCCC !important;
+  }
+  
+  #printArea .print-bw-active .td-print,
+  #printArea .print-bw-active .th-print,
+  #printArea .print-bw-active .table-print {
+    border-color: black !important;
+  }
+  
+  #printArea .print-bw-active .td-print,
+  #printArea .print-bw-active .watermark-print {
+    color: black !important;
+  }
+  
+  #printArea .print-color-active .page-footer-print {
+    background-color: #F9FAFB !important;
+  }
+  
+  #printArea .print-bw-active .page-footer-print {
+    background-color: #E0E0E0 !important;
+  }
+  
+  #printArea .print-color-active .tr-even-print {
+    background-color: #F9FAFB !important;
+  }
+  
+  #printArea .print-color-active .tr-odd-print {
+    background-color: white !important;
+  }
+  
+  #printArea .print-bw-active .tr-even-print {
+    background-color: #F0F0F0 !important;
+  }
+  
+  #printArea .print-bw-active .tr-odd-print {
+    background-color: white !important;
+  }
+  
+  #printArea .th-print, #printArea .td-print {
+    padding: 8px 10px !important;
+    font-size: 11pt !important;
+    vertical-align: middle;
+  }
+  
+  #printArea .watermark-print {
+    font-size: 8pt !important;
+  }
+
+  /* Hide all buttons and controls during print */
+  .page-actions,
+  .page-actions-print,
+  .controls-container,
+  button,
+  .settings-panel {
+    display: none !important;
+  }
+}
+
+/* Animation classes */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}
