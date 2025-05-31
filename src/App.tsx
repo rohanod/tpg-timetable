@@ -79,7 +79,7 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+            <Route path="*\" element={<Navigate to="/dashboard\" replace />} />
           </Routes>
         ) : (
           <Routes>
