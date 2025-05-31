@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, LogOut, Settings, Calendar, Users } from 'lucide-react';
+import { Plus, Trash2, LogOut, Settings, Calendar, Users, Bell } from 'lucide-react';
 import { ProjectService } from '../services/projects';
 import { Project, UserProfile } from '../types';
 import { AuthService } from '../services/auth';
@@ -80,7 +80,7 @@ export const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
@@ -89,87 +89,115 @@ export const Dashboard: React.FC = () => {
   const canCreateProject = userProfile?.is_premium || projects.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-orange-500 mr-2" />
+              <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
+            </div>
             
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-gray-600">
-                {userProfile?.is_premium ? 'Premium Account' : 'Free Account'}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <LogOut size={18} />
-                Sign Out
-              </button>
+            <div className="flex items-center space-x-4">
+              {userProfile?.is_premium && (
+                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white">
+                  Premium
+                </span>
+              )}
+              
+              <div className="relative">
+                <button className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full">
+                  <span className="sr-only">View notifications</span>
+                  <Bell className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="border-l border-gray-200 h-6 mx-2"></div>
+              
+              <div className="flex items-center">
+                <button
+                  onClick={handleLogout}
+                  className="ml-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <LogOut size={18} />
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
-            <p className="text-gray-600 mt-1">
-              {userProfile?.is_premium 
-                ? 'Premium account: Unlimited projects and timetables' 
-                : 'Free account: 1 project with up to 3 timetables'}
-            </p>
-          </div>
-          
-          {!canCreateProject ? (
-            <div className="flex flex-col gap-2 items-end">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                {userProfile?.is_premium 
+                  ? 'Premium account: Unlimited projects and timetables' 
+                  : 'Free account: 1 project with up to 3 timetables'}
+              </p>
+            </div>
+            
+            {!canCreateProject ? (
+              <div className="mt-4 sm:mt-0 flex flex-col sm:items-end">
+                <button
+                  className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md flex items-center gap-2 cursor-not-allowed"
+                  disabled
+                  title="Free users can only create one project"
+                >
+                  <Plus size={20} />
+                  New Project
+                </button>
+                <a 
+                  href="#upgrade" 
+                  className="mt-2 text-sm text-orange-600 hover:text-orange-700"
+                >
+                  Upgrade to Premium
+                </a>
+              </div>
+            ) : (
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md flex items-center gap-2 cursor-not-allowed"
-                disabled
-                title="Free users can only create one project"
+                onClick={() => setShowNewProjectDialog(true)}
+                className="mt-4 sm:mt-0 px-4 py-2 bg-orange-500 text-white rounded-md flex items-center gap-2 hover:bg-orange-600 transition-colors shadow-sm"
               >
                 <Plus size={20} />
                 New Project
               </button>
-              <a 
-                href="#upgrade" 
-                className="text-sm text-orange-600 hover:text-orange-700"
-              >
-                Upgrade to Premium
-              </a>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowNewProjectDialog(true)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-md flex items-center gap-2 hover:bg-orange-600 transition-colors"
-            >
-              <Plus size={20} />
-              New Project
-            </button>
-          )}
+            )}
+          </div>
         </div>
 
         {projects.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <Calendar size={48} className="mx-auto mb-4 text-orange-500" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-            <p className="text-gray-600 mb-6">Create your first project to get started generating bus timetables</p>
-            <button
-              onClick={() => setShowNewProjectDialog(true)}
-              className="px-6 py-3 bg-orange-500 text-white rounded-md inline-flex items-center gap-2 hover:bg-orange-600 transition-colors"
-            >
-              <Plus size={20} />
-              Create First Project
-            </button>
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
+              <Calendar className="h-6 w-6 text-orange-600" />
+            </div>
+            <h3 className="mt-5 text-lg font-medium text-gray-900">No projects yet</h3>
+            <p className="mt-2 text-gray-500">
+              Create your first project to get started generating bus timetables
+            </p>
+            <div className="mt-6">
+              <button
+                onClick={() => setShowNewProjectDialog(true)}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                <Plus className="-ml-1 mr-2 h-5 w-5" />
+                Create First Project
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map(project => (
-              <div key={project.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div 
+                key={project.id} 
+                className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden"
+              >
                 <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">{project.name}</h3>
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-lg font-medium text-gray-900 truncate">{project.name}</h3>
                     <button
                       onClick={() => handleDeleteProject(project.id)}
                       className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
@@ -178,16 +206,18 @@ export const Dashboard: React.FC = () => {
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-600 mb-6">
+                  <p className="mt-2 text-sm text-gray-500">
                     Created on {new Date(project.created_at).toLocaleDateString()}
                   </p>
-                  <button
-                    onClick={() => navigate(`/project/${project.id}`)}
-                    className="w-full px-4 py-2.5 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Settings size={18} />
-                    Open Project
-                  </button>
+                  <div className="mt-5">
+                    <button
+                      onClick={() => navigate(`/project/${project.id}`)}
+                      className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                    >
+                      <Settings className="-ml-1 mr-2 h-5 w-5" />
+                      Open Project
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -195,19 +225,41 @@ export const Dashboard: React.FC = () => {
         )}
 
         {!userProfile?.is_premium && (
-          <div id="upgrade" className="mt-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg shadow-md p-6 text-white">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-full">
-                <Users size={28} className="text-white" />
+          <div id="upgrade" className="mt-12 bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="px-6 py-8 bg-gradient-to-r from-orange-500 to-amber-500 sm:p-10 sm:pb-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 bg-white/20 rounded-full p-3">
+                  <Users className="h-6 w-6 text-white" aria-hidden="true" />
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-xl font-semibold text-white">Upgrade to Premium</h3>
+                  <p className="text-orange-50 mt-1">Get unlimited projects and timetables</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold mb-2">Upgrade to Premium</h3>
-                <p className="mb-4 text-white text-opacity-90">
-                  Get unlimited projects and timetables, plus priority support and advanced features.
-                </p>
-                <button className="px-5 py-2.5 bg-white text-orange-600 font-medium rounded-md hover:bg-gray-100 transition-colors">
-                  Upgrade Now
-                </button>
+            </div>
+            <div className="border-t border-orange-100 bg-orange-50 px-6 py-6 sm:px-10 sm:py-6">
+              <div className="sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <ul className="mt-3 space-y-2">
+                    <li className="flex items-center">
+                      <span className="h-5 w-5 text-orange-500 mr-2">✓</span>
+                      <span className="text-gray-700">Unlimited projects</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="h-5 w-5 text-orange-500 mr-2">✓</span>
+                      <span className="text-gray-700">Unlimited timetables per project</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="h-5 w-5 text-orange-500 mr-2">✓</span>
+                      <span className="text-gray-700">Priority support</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="mt-6 sm:mt-0 sm:ml-6">
+                  <button className="w-full flex justify-center py-2.5 px-5 border border-transparent rounded-md shadow-sm text-sm font-medium text-orange-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                    Upgrade Now
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -244,7 +296,7 @@ export const Dashboard: React.FC = () => {
         )}
       </main>
       
-      <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
+      <footer className="bg-white border-t border-gray-200 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500 text-sm">
             &copy; {new Date().getFullYear()} Bus Timetable Generator. All rights reserved.
