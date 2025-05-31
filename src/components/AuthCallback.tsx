@@ -11,13 +11,12 @@ export const AuthCallback = () => {
       try {
         console.log("Auth callback component mounted");
         
-        // First, clear URL hash to prevent security issues
+        // Clear URL hash immediately to prevent security issues
         if (window.location.hash) {
-          // Replace the current URL without the hash
           window.history.replaceState(null, '', window.location.pathname);
         }
         
-        // Process the session after clearing hash
+        // Process the session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -26,17 +25,15 @@ export const AuthCallback = () => {
           return;
         }
         
-        // Short delay to ensure browser state is settled
-        setTimeout(() => {
-          if (data?.session) {
-            console.log("Auth successful, redirecting to dashboard");
-            // Use window.location for a full page navigation to avoid history issues
-            window.location.href = '/dashboard';
-          } else {
-            console.log("No session found, redirecting to home");
-            window.location.href = '/';
-          }
-        }, 200);
+        // Use a direct approach for navigation to avoid history manipulation issues
+        if (data?.session) {
+          console.log("Auth successful, redirecting to dashboard");
+          // Force a complete page reload to reset any problematic state
+          window.location.href = '/dashboard';
+        } else {
+          console.log("No session found, redirecting to home");
+          window.location.href = '/';
+        }
       } catch (err) {
         console.error('Error processing auth callback:', err);
         setError('Failed to complete authentication. Please try again.');

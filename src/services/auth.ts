@@ -16,8 +16,8 @@ export const supabase = createClient(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true, // This is important for callback handling
-      storageKey: 'tpg-auth-session' // Custom storage key to avoid conflicts
+      detectSessionInUrl: true,
+      storageKey: 'tpg-auth-storage-key' // Custom storage key to avoid conflicts
     }
   }
 );

@@ -22,6 +22,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         try {
           await AuthService.getUserProfile();
           onClose();
+          // Force a full page reload to ensure clean state
           window.location.href = '/dashboard';
         } catch (error) {
           console.error('Error handling sign in:', error);
@@ -176,7 +177,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center text-sm">
                 {authView === 'sign_in' ? (
                   <>
-                    <a href="#forgot\" className="text-orange-600 hover:text-orange-700">
+                    <a href="#forgot" className="text-orange-600 hover:text-orange-700">
                       Forgot your password?
                     </a>
                     <div className="mt-2">
