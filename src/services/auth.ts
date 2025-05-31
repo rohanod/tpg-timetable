@@ -11,7 +11,13 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(
   supabaseUrl || 'https://your-project.supabase.co',
-  supabaseKey || 'your-anon-key'
+  supabaseKey || 'your-anon-key',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true
+    }
+  }
 );
 
 export interface User {
@@ -24,8 +30,8 @@ export const AuthService = {
   
   isAuthenticated: async (): Promise<boolean> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      return !!user;
+      const { data: { session } } = await supabase.auth.getSession();
+      return !!session;
     } catch (error) {
       console.error('Auth check failed:', error);
       return false;
@@ -34,7 +40,9 @@ export const AuthService = {
 
   getUserProfile: async (): Promise<UserProfile | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      
       if (!user) return null;
 
       // First check if the profile exists
