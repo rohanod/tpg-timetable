@@ -108,14 +108,18 @@ export const ProjectService = {
       throw new Error('You can only create three timetables per project. Please delete an existing timetable first.');
     }
 
-    // Omit any potential id from the timetable object to let Supabase generate a UUID
-    const { id, ...timetableWithoutId } = timetable as any;
+    // Create a new timetable object without any id property
+    const newTimetable = {
+      project_id: projectId,
+      stopName: timetable.stopName,
+      stopId: timetable.stopId,
+      theme: timetable.theme,
+      data: timetable.data || []
+    };
 
     const { data, error } = await supabase
       .from('timetables')
-      .insert([
-        { ...timetableWithoutId, project_id: projectId }
-      ])
+      .insert([newTimetable])
       .select()
       .single();
 
@@ -129,7 +133,13 @@ export const ProjectService = {
   },
 
   async updateTimetable(timetableId: string, updates: Partial<TimetablePageData>): Promise<void> {
-    // Make sure we don't try to update the id field
+    // Make sure we don't try to update the id field or include temporary IDs
+    if (timetableId.startsWith('temp-')) {
+      console.warn('Attempted to update a timetable with a temporary ID:', timetableId);
+      return;
+    }
+
+    // Create a new updates object without the id property
     const { id, ...updatesWithoutId } = updates as any;
 
     const { error } = await supabase
@@ -157,12 +167,19 @@ export const ProjectService = {
   },
 
   async deleteTimetable(timetableId: string): Promise<void> {
+    // Skip deletion for temporary IDs
+    if (timetableId.startsWith('temp-')) {
+      console.warn('Attempted to delete a timetable with a temporary ID:', timetableId);
+      return;
+    }
+
     const { error } = await supabase
       .from('timetables')
       .delete()
       .eq('id', timetableId);
 
     if (error) {
+      console.error('Error deleting timetable:', error);
       toast.error('Failed to delete timetable');
       throw error;
     }

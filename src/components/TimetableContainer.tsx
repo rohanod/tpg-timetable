@@ -98,14 +98,12 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
       try {
         const { data: userProfile } = await ProjectService.getUserPermissions();
         
-        if (!userProfile.is_premium && timetablePages.length >= 3) {
+        if (timetablePages.length >= 3) {
           toast.error('You can only create up to 3 timetables per project. Please delete an existing timetable first.');
           return;
         }
         
-        // Create a temporary ID for the UI
-        const tempId = `temp-${Date.now()}`;
-        
+        // Create timetable in the database first
         const newPage = {
           stopName: 'Select a stop...',
           stopId: '',
@@ -113,28 +111,18 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
           data: []
         };
         
-        // Add to UI with temporary ID first
-        addTimetablePage({
-          ...newPage,
-          id: tempId
-        });
-        
-        // Create in database and get real ID
+        // Create in database and get the real UUID
         const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
         
-        // Update the temporary ID with the real UUID from the server
         if (savedTimetable) {
-          // Replace the temporary timetable with the one from the server
-          setTimetablePages(prev => 
-            prev.map(page => 
-              page.id === tempId ? 
-                { ...page, id: savedTimetable.id } : 
-                page
-            )
-          );
-          
-          // Also update filtered data with the new ID
-          updateFilteredData(savedTimetable.id, []);
+          // Add to UI with the real UUID from the database
+          addTimetablePage({
+            id: savedTimetable.id,
+            stopName: savedTimetable.stopName,
+            stopId: savedTimetable.stopId,
+            theme: savedTimetable.theme as 'color' | 'bw',
+            data: savedTimetable.data || []
+          });
         }
       } catch (error: any) {
         toast.error(error.message || 'Failed to create timetable');

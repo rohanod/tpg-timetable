@@ -238,6 +238,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     
     if (projectId) {
       try {
+        // For projects, create a new empty timetable
         const newPage = {
           stopName: 'Select a stop...',
           stopId: '',
@@ -245,31 +246,18 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
           data: []
         };
         
-        // Create a temporary ID for UI
-        const tempId = `temp-${Date.now()}`;
-        
-        // Add to UI with temporary ID first
-        addTimetablePage({
-          ...newPage,
-          id: tempId
-        });
-        
-        // Create in database and get real ID
+        // First create the timetable in the database
         const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
         
-        // Update the temporary ID with the real UUID from the server
         if (savedTimetable) {
-          // Replace the temporary timetable with the one from the server
-          setTimetablePages(prev => 
-            prev.map(page => 
-              page.id === tempId ? 
-                { ...page, id: savedTimetable.id } : 
-                page
-            )
-          );
-          
-          // Also update filtered data with the new ID
-          updateFilteredData(savedTimetable.id, []);
+          // Then add the timetable to the UI with the database UUID
+          addTimetablePage({
+            id: savedTimetable.id,
+            stopName: savedTimetable.stopName,
+            stopId: savedTimetable.stopId,
+            theme: savedTimetable.theme as 'color' | 'bw',
+            data: savedTimetable.data || []
+          });
         }
       } catch (error: any) {
         toast.error(error.message || 'Failed to create timetable');
