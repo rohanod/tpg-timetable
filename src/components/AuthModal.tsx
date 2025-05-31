@@ -80,9 +80,67 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   anchor: 'text-orange-600 hover:text-orange-700',
                   divider: 'my-6',
                   message: 'text-center text-sm mb-4',
-                  // Google provider button with white background for better contrast
+                  // Google provider button with custom styling per Google specs
                   auth_button: 'w-full',
-                  auth_button_provider_google: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md transition-colors'
+                  auth_button_provider_google: `
+                    -moz-user-select: none;
+                    -webkit-user-select: none;
+                    -ms-user-select: none;
+                    -webkit-appearance: none;
+                    background-color: white;
+                    background-image: none;
+                    border: 1px solid #f97316;
+                    border-radius: 20px;
+                    box-sizing: border-box;
+                    color: #1f1f1f;
+                    cursor: pointer;
+                    font-family: 'Roboto', arial, sans-serif;
+                    font-size: 14px;
+                    height: 40px;
+                    letter-spacing: 0.25px;
+                    outline: none;
+                    overflow: hidden;
+                    padding: 0 12px;
+                    position: relative;
+                    text-align: center;
+                    transition: background-color .218s, border-color .218s, box-shadow .218s;
+                    vertical-align: middle;
+                    white-space: nowrap;
+                    width: 100%;
+                    max-width: 400px;
+                    min-width: min-content;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    margin-top: 8px;
+                    margin-bottom: 8px;
+                    font-weight: 500;
+                    &:hover {
+                      box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+                      background-color: rgba(66, 133, 244, 0.04);
+                    }
+                    &:active {
+                      background-color: rgba(66, 133, 244, 0.1);
+                    }
+                  `
+                },
+                style: {
+                  button: {
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  },
+                  input: {
+                    borderRadius: '6px',
+                  },
+                  auth_button_provider_google: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    border: '1px solid #f97316', // Orange border
+                  }
                 },
               }}
               theme="default"
