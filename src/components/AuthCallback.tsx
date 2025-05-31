@@ -9,11 +9,10 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the current URL hash - this contains the token information
-        const hash = window.location.hash;
-        console.log("Processing auth callback with hash:", hash ? "Hash present" : "No hash");
+        console.log("Auth callback component mounted");
         
-        // Process the callback from Supabase Auth
+        // This will automatically extract the auth tokens from the URL
+        // and establish a session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
