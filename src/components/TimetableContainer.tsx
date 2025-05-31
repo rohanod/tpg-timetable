@@ -32,7 +32,15 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
     try {
       const timetables = await ProjectService.getTimetables(projectId as string);
       if (timetables.length > 0) {
-        setTimetablePages(timetables);
+        // Convert database timetables to the format expected by the app
+        const formattedTimetables = timetables.map(t => ({
+          id: t.id,
+          stopName: t.stopName,
+          stopId: t.stopId,
+          theme: t.theme as 'color' | 'bw',
+          data: t.data || []
+        }));
+        setTimetablePages(formattedTimetables);
       }
     } catch (error) {
       console.error('Error loading timetables:', error);
@@ -40,15 +48,18 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
   };
 
   const handleRemovePage = async (id: string) => {
-    removeTimetablePage(id);
-    
     if (projectId) {
       try {
+        // Delete from database first
         await ProjectService.deleteTimetable(id);
+        // Then remove from UI if deletion was successful
+        removeTimetablePage(id);
       } catch (error) {
         console.error('Error deleting timetable:', error);
         toast.error('Failed to delete timetable from server');
       }
+    } else {
+      removeTimetablePage(id);
     }
   };
 
@@ -88,7 +99,7 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
         const { data: userProfile } = await ProjectService.getUserPermissions();
         
         if (!userProfile.is_premium && timetablePages.length >= 3) {
-          toast.error('Free users can only create up to 3 timetables per project. Upgrade to premium for unlimited timetables.');
+          toast.error('You can only create up to 3 timetables per project. Please delete an existing timetable first.');
           return;
         }
         

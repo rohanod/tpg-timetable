@@ -120,6 +120,7 @@ export const ProjectService = {
       .single();
 
     if (error) {
+      console.error('Error adding timetable:', error);
       toast.error('Failed to create timetable');
       throw error;
     }
@@ -128,12 +129,16 @@ export const ProjectService = {
   },
 
   async updateTimetable(timetableId: string, updates: Partial<TimetablePageData>): Promise<void> {
+    // Make sure we don't try to update the id field
+    const { id, ...updatesWithoutId } = updates as any;
+
     const { error } = await supabase
       .from('timetables')
-      .update(updates)
+      .update(updatesWithoutId)
       .eq('id', timetableId);
 
     if (error) {
+      console.error('Error updating timetable:', error);
       toast.error('Failed to update timetable');
       throw error;
     }
