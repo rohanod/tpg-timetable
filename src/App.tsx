@@ -79,10 +79,10 @@ function App() {
           {/* Protected routes */}
           {isAuthenticated ? (
             <>
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard\" element={<Dashboard />} />
               <Route path="/project/:projectId" element={<ProjectEditor />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard\" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
             </>
           ) : (
             <>
@@ -110,7 +110,7 @@ function App() {
                   </div>
                 </div>
               } />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/\" replace />} />
             </>
           )}
         </Routes>
