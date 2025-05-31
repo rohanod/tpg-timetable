@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Clock, FileDown, Plus, X, Filter, RefreshCw } from 'lucide-react';
+import { Search, Clock, FileDown, Plus, X, Filter } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { searchStops, fetchStationboard, getDemoSchedule } from '../services/api';
-import { StopSuggestion, BusFilter } from '../types';
+import { StopSuggestion } from '../types';
 import { ProjectService } from '../services/projects';
 import { toast } from 'react-hot-toast';
 
@@ -23,7 +23,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     selectedTimetable,
     updateTimetablePage,
     updateFilteredData,
-    setTimetablePages
+    setTimetablePages,
+    timeFilter
   } = useAppContext();
   
   const [stopSuggestions, setStopSuggestions] = useState<StopSuggestion[]>([]);
@@ -35,6 +36,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   const [editingFilter, setEditingFilter] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [userCanAddTimetable, setUserCanAddTimetable] = useState(true);
+  const [updateTimerId, setUpdateTimerId] = useState<NodeJS.Timeout | null>(null);
   const busInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,12 +44,33 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       checkTimetableLimit();
     }
   }, [projectId, timetablePages]);
+  
+  // Auto-update effect - update 2 seconds after last filter change
+  useEffect(() => {
+    if (!selectedTimetable) return;
+    
+    // Clear any existing timer
+    if (updateTimerId) {
+      clearTimeout(updateTimerId);
+    }
+    
+    // Set new timer for auto-update
+    const timerId = setTimeout(() => {
+      handleUpdateFilters();
+    }, 2000);
+    
+    setUpdateTimerId(timerId);
+    
+    return () => {
+      if (updateTimerId) clearTimeout(updateTimerId);
+    };
+  }, [timeInput, busFilters, selectedTimetable]);
 
   const checkTimetableLimit = async () => {
     try {
       const { data: userProfile } = await ProjectService.getUserPermissions();
       
-      if (!userProfile.is_premium && timetablePages.length >= 3) {
+      if (timetablePages.length >= 3) {
         setUserCanAddTimetable(false);
       } else {
         setUserCanAddTimetable(true);
@@ -98,7 +121,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     
     try {
       setIsUpdating(true);
-      let scheduleData = await fetchStationboard(stop.id || stop.label);
+      let scheduleData = await fetchStationboard(stop.id || stop.label, {
+        time: timeInput || undefined
+      });
       
       if (scheduleData.length === 0) {
         scheduleData = getDemoSchedule(stop.label);
@@ -165,6 +190,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   const handleTimeFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setTimeInput(value);
+    setTimeFilter(value);
   };
 
   const handleUpdateFilters = async () => {
@@ -175,10 +201,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     
     try {
       setIsUpdating(true);
-      setTimeFilter(timeInput);
       
-      // Refresh the data
-      let scheduleData = await fetchStationboard(selectedPage.stopId);
+      // Refresh the data with time filter if set
+      let scheduleData = await fetchStationboard(selectedPage.stopId, {
+        time: timeInput || undefined
+      });
+      
       if (scheduleData.length === 0) {
         scheduleData = getDemoSchedule(selectedPage.stopName);
       }
@@ -423,15 +451,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
                     <Clock className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </div>
                   
-                  {selectedTimetable && (
-                    <button
-                      onClick={handleUpdateFilters}
-                      disabled={isUpdating}
-                      className={`px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors ${isUpdating ? 'opacity-75 cursor-not-allowed' : ''}`}
-                    >
-                      <RefreshCw size={18} className={isUpdating ? 'animate-spin' : ''} />
-                      {isUpdating ? 'Updating...' : 'Update Timetable'}
-                    </button>
+                  {isUpdating && (
+                    <span className="text-sm text-gray-500 animate-pulse ml-2">
+                      Updating...
+                    </span>
                   )}
                 </div>
               </div>

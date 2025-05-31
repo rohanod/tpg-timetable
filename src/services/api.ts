@@ -30,17 +30,28 @@ export const fetchStationboard = async (
   } = {}
 ): Promise<StopSchedule[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/stationboard.json`, {
-      params: {
-        stop: stopId,
-        limit: 200,
-        date: options.date,
-        time: options.time,
-        show_tracks: 1,
-        show_subsequent_stops: 1,
-        transportation_types: options.transportation_types
-      }
-    });
+    const params: Record<string, any> = {
+      stop: stopId,
+      limit: 200,
+      show_tracks: 1,
+      show_subsequent_stops: 1
+    };
+    
+    // Only add time parameter if it's provided
+    if (options.time) {
+      params.time = options.time;
+    }
+    
+    // Add other optional parameters
+    if (options.date) {
+      params.date = options.date;
+    }
+    
+    if (options.transportation_types) {
+      params.transportation_types = options.transportation_types;
+    }
+    
+    const response = await axios.get(`${API_BASE_URL}/stationboard.json`, { params });
     
     const data: StationboardResponse = response.data;
     
