@@ -80,7 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   anchor: 'text-orange-600 hover:text-orange-700',
                   divider: 'my-6',
                   message: 'text-center text-sm mb-4',
-                  // Dark Google provider button
+                  // Orange Google provider button
                   auth_button: 'w-full',
                   auth_button_provider_google: `
                     google-button
@@ -91,15 +91,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     gap-2
                     px-4
                     py-2.5
-                    bg-black
+                    bg-orange-500
                     text-white
-                    border
-                    border-black
                     rounded-md
                     transition-colors
                     font-medium
                     my-2
-                    hover:bg-gray-900
+                    hover:bg-orange-600
                   `
                 },
                 style: {
