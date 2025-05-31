@@ -109,22 +109,24 @@
 
 /* Orange Google Button */
 .orange-google-button {
-  background-color: #f97316;
-  border: 1px solid #ea580c;
-  color: white;
-  border-radius: 6px;
+  background-color: white;
+  border: 1px solid #747775;
+  color: #1f1f1f;
+  border-radius: 4px;
 }
 
 .orange-google-button:hover {
-  background-color: #ea580c;
+  background-color: white;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
 }
 
 .orange-google-button .gsi-material-button-state {
-  background-color: white;
+  background-color: #303030;
 }
 
 .orange-google-button:not(:disabled):hover .gsi-material-button-state {
-  background-color: white;
+  background-color: #303030;
+  opacity: 8%;
 }
 
 /* Print styles */
