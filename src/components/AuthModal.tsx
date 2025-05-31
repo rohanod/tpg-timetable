@@ -83,21 +83,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   // Orange Google provider button
                   auth_button: 'w-full',
                   auth_button_provider_google: `
-                    google-button
+                    gsi-material-button
+                    bg-orange-500
+                    border-orange-600
+                    text-white
+                    hover:shadow
                     w-full
                     flex
                     items-center
                     justify-center
-                    gap-2
-                    px-4
-                    py-2.5
-                    bg-orange-500
-                    text-white
-                    rounded-md
-                    transition-colors
-                    font-medium
                     my-2
-                    hover:bg-orange-600
                   `
                 },
                 style: {
