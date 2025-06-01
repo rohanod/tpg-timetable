@@ -156,7 +156,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center text-sm">
                 {authView === 'sign_in' ? (
                   <>
-                    <a href="#forgot" className="text-orange-600 hover:text-orange-700">
+                    <a href="#forgot\" className="text-orange-600 hover:text-orange-700">
                       Forgot your password?
                     </a>
                     <div className="mt-2">
