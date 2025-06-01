@@ -4,7 +4,7 @@ import { ArrowLeft, Settings } from 'lucide-react';
 import { TimetableContainer } from './TimetableContainer';
 import { Toolbar } from './Toolbar';
 import { ProjectService } from '../services/projects';
-import { Project, UserProfile } from '../types';
+import { Project, UserProfile, Timetable } from '../types';
 import { AuthService } from '../services/auth';
 import { AppProvider } from '../contexts/AppContext';
 import { PrintArea } from './PrintArea';
@@ -17,6 +17,7 @@ export const ProjectEditor: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [timetables, setTimetables] = useState<Timetable[]>([]);
 
   useEffect(() => {
     loadProjectData();
@@ -45,13 +46,15 @@ export const ProjectEditor: React.FC = () => {
         return;
       }
 
-      const [projectData, profile] = await Promise.all([
+      const [projectData, profile, timetablesData] = await Promise.all([
         ProjectService.getProject(projectId),
-        AuthService.getUserProfile()
+        AuthService.getUserProfile(),
+        ProjectService.getTimetables(projectId)
       ]);
       
       setProject(projectData);
       setUserProfile(profile);
+      setTimetables(timetablesData);
     } catch (error) {
       console.error('Error loading project:', error);
       toast.error('Failed to load project');
@@ -135,7 +138,11 @@ export const ProjectEditor: React.FC = () => {
 
           <div className="app-container w-full flex flex-col flex-1 min-h-0">
             <Toolbar projectId={projectId} />
-            <TimetableContainer setIsPrinting={setIsPrinting} projectId={projectId} />
+            <TimetableContainer 
+              setIsPrinting={setIsPrinting} 
+              projectId={projectId}
+              initialTimetables={timetables}
+            />
           </div>
           
           <PrintArea />

@@ -11,7 +11,10 @@ export const ProjectService = {
 
     const { data: projects, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(`
+        *,
+        timetables (*)
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -30,7 +33,10 @@ export const ProjectService = {
     
     const { data: project, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(`
+        *,
+        timetables (*)
+      `)
       .eq('id', projectId)
       .single();
 
@@ -94,7 +100,10 @@ export const ProjectService = {
       .insert([
         { name, user_id: user.id }
       ])
-      .select()
+      .select(`
+        *,
+        timetables (*)
+      `)
       .single();
 
     if (error) {
@@ -146,9 +155,9 @@ export const ProjectService = {
     // Create a new timetable
     const newTimetable = {
       project_id: projectId,
-      stopName: timetable.stopName,
-      stopId: timetable.stopId,
-      theme: timetable.theme,
+      stopName: timetable.stopName || 'New Timetable',
+      stopId: timetable.stopId || '',
+      theme: timetable.theme || 'color',
       data: timetable.data || []
     };
 
@@ -199,6 +208,18 @@ export const ProjectService = {
       throw new Error('Project ID is required');
     }
     
+    // Delete all timetables first
+    const { error: timetablesError } = await supabase
+      .from('timetables')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (timetablesError) {
+      console.error('Error deleting project timetables:', timetablesError);
+      throw timetablesError;
+    }
+
+    // Then delete the project
     const { error } = await supabase
       .from('projects')
       .delete()

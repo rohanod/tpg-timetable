@@ -5,15 +5,18 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { Plus } from 'lucide-react';
 import { ProjectService } from '../services/projects';
 import { toast } from 'react-hot-toast';
+import { Timetable } from '../types';
 
 interface TimetableContainerProps {
   setIsPrinting: (isPrinting: boolean) => void;
   projectId?: string;
+  initialTimetables?: Timetable[];
 }
 
 export const TimetableContainer: React.FC<TimetableContainerProps> = ({ 
   setIsPrinting, 
-  projectId 
+  projectId,
+  initialTimetables = []
 }) => {
   const { 
     timetablePages, 
@@ -26,30 +29,18 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
 
   // Load timetables from project if projectId is provided
   useEffect(() => {
-    if (projectId) {
-      loadTimetables();
+    if (projectId && initialTimetables.length > 0) {
+      // Convert database timetables to the format expected by the app
+      const formattedTimetables = initialTimetables.map(t => ({
+        id: t.id,
+        stopName: t.stopName,
+        stopId: t.stopId,
+        theme: t.theme as 'color' | 'bw',
+        data: t.data || []
+      }));
+      setTimetablePages(formattedTimetables);
     }
-  }, [projectId]);
-
-  const loadTimetables = async () => {
-    try {
-      const timetables = await ProjectService.getTimetables(projectId as string);
-      if (timetables.length > 0) {
-        // Convert database timetables to the format expected by the app
-        const formattedTimetables = timetables.map(t => ({
-          id: t.id,
-          stopName: t.stopName,
-          stopId: t.stopId,
-          theme: t.theme as 'color' | 'bw',
-          data: t.data || []
-        }));
-        setTimetablePages(formattedTimetables);
-      }
-    } catch (error) {
-      console.error('Error loading timetables:', error);
-      toast.error('Failed to load timetables');
-    }
-  };
+  }, [projectId, initialTimetables]);
 
   const handleRemovePage = async (id: string) => {
     if (projectId) {
