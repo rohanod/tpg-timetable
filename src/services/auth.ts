@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase environment variables');
 }
 
-// Create Supabase client with simple configuration
+// Create Supabase client with minimal configuration
 export const supabase = createClient(
   supabaseUrl || 'https://your-project.supabase.co',
   supabaseKey || 'your-anon-key'
@@ -19,9 +19,12 @@ export const supabase = createClient(
 export const AuthService = {
   // Check if user is authenticated
   isAuthenticated: async (): Promise<boolean> => {
+    console.log("Checking auth status...");
     try {
       const { data } = await supabase.auth.getSession();
-      return !!data.session;
+      const isAuth = !!data.session;
+      console.log("Auth status:", isAuth ? "authenticated" : "not authenticated");
+      return isAuth;
     } catch (error) {
       console.error('Auth check failed:', error);
       return false;
@@ -33,7 +36,10 @@ export const AuthService = {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) return null;
+      if (!user) {
+        console.log("No user found when getting profile");
+        return null;
+      }
 
       // Check if the profile exists
       const { data: profile, error } = await supabase
@@ -43,6 +49,7 @@ export const AuthService = {
         .single();
 
       if (error || !profile) {
+        console.log("No profile found, creating new profile");
         // Create a profile if it doesn't exist
         const newProfile = {
           id: user.id,
@@ -86,6 +93,7 @@ export const AuthService = {
     }
     
     toast.success('Logged in successfully!');
+    // Use direct navigation to avoid Router issues
     window.location.href = '/dashboard';
   },
   
@@ -93,7 +101,10 @@ export const AuthService = {
   register: async (email: string, password: string): Promise<void> => {
     const { error } = await supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
     });
     
     if (error) {
@@ -114,6 +125,7 @@ export const AuthService = {
     }
     
     toast.success('Logged out successfully');
+    // Use direct navigation to avoid Router issues
     window.location.href = '/';
   }
 };

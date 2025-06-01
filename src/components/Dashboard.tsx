@@ -18,8 +18,10 @@ export const Dashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
+      console.log("Loading dashboard data...");
       const isAuth = await AuthService.isAuthenticated();
       if (!isAuth) {
+        console.log("User not authenticated, redirecting to home");
         window.location.href = '/';
         return;
       }
@@ -29,6 +31,7 @@ export const Dashboard: React.FC = () => {
         AuthService.getUserProfile()
       ]);
       
+      console.log(`Loaded ${projectsData.length} projects`);
       setProjects(projectsData);
       setUserProfile(profile);
     } catch (error) {

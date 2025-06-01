@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Settings } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { TimetableContainer } from './TimetableContainer';
 import { Toolbar } from './Toolbar';
 import { ProjectService } from '../services/projects';
@@ -12,7 +12,6 @@ import { toast } from 'react-hot-toast';
 
 export const ProjectEditor: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,14 +32,16 @@ export const ProjectEditor: React.FC = () => {
 
   const loadData = async () => {
     if (!projectId) {
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
       return;
     }
 
     try {
+      console.log("Loading project data...");
       const isAuth = await AuthService.isAuthenticated();
       if (!isAuth) {
-        navigate('/');
+        console.log("User not authenticated, redirecting to home");
+        window.location.href = '/';
         return;
       }
 
@@ -54,7 +55,7 @@ export const ProjectEditor: React.FC = () => {
     } catch (error) {
       console.error('Error loading project:', error);
       toast.error('Failed to load project');
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } finally {
       setIsLoading(false);
     }
@@ -79,13 +80,13 @@ export const ProjectEditor: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => navigate('/dashboard')}
+                <a
+                  href="/dashboard"
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   title="Back to Dashboard"
                 >
                   <ArrowLeft size={20} />
-                </button>
+                </a>
                 <h1 className="text-xl font-semibold text-gray-900 truncate max-w-md">
                   {project.name}
                 </h1>
@@ -101,13 +102,13 @@ export const ProjectEditor: React.FC = () => {
                     Free
                   </span>
                 )}
-                <button
-                  onClick={() => navigate('/dashboard')}
+                <a
+                  href="/dashboard"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                 >
                   <Settings size={18} />
                   Dashboard
-                </button>
+                </a>
               </div>
             </div>
           </div>

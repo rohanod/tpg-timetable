@@ -28,21 +28,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       onClose();
     } catch (error: any) {
       setError(error.message || 'An error occurred');
-    } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    setError('');
     setIsLoading(true);
+    
     try {
-      await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       });
-      // Don't set loading to false here as we're redirecting
+      
+      if (error) throw error;
+      // Don't reset loading state since we're redirecting
+      
     } catch (error: any) {
       setError(error.message || 'An error occurred with Google sign in');
       setIsLoading(false);
@@ -141,7 +145,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     disabled={isLoading}
                     className="w-full px-4 py-2.5 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
                   >
-                    {authView === 'sign_in' ? 'Sign in' : 'Sign up'}
+                    {isLoading ? 
+                      (authView === 'sign_in' ? 'Signing in...' : 'Signing up...') : 
+                      (authView === 'sign_in' ? 'Sign in' : 'Sign up')
+                    }
                   </button>
                 </div>
               </form>
@@ -149,7 +156,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="text-center text-sm">
                 {authView === 'sign_in' ? (
                   <>
-                    <a href="#forgot\" className="text-orange-600 hover:text-orange-700">
+                    <a href="#forgot" className="text-orange-600 hover:text-orange-700">
                       Forgot your password?
                     </a>
                     <div className="mt-2">

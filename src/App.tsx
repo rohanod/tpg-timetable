@@ -15,8 +15,10 @@ function App() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("Initial auth check...");
       try {
         const authenticated = await AuthService.isAuthenticated();
+        console.log("Authentication result:", authenticated);
         
         setIsAuthenticated(authenticated);
         if (!authenticated) {
@@ -79,10 +81,10 @@ function App() {
           {/* Protected routes */}
           {isAuthenticated ? (
             <>
-              <Route path="/dashboard\" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/project/:projectId" element={<ProjectEditor />} />
-              <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>
           ) : (
             <>
@@ -110,7 +112,7 @@ function App() {
                   </div>
                 </div>
               } />
-              <Route path="*" element={<Navigate to="/\" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
         </Routes>

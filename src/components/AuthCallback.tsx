@@ -7,27 +7,34 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Processing authentication...");
+        console.log("Processing authentication callback...");
         
         // Get the session (this will automatically process the URL)
         const { data, error } = await supabase.auth.getSession();
         
+        console.log("Auth callback result:", error ? "Error" : "Success");
+        
         if (error) {
-          console.error('Auth error:', error);
+          console.error('Auth callback error:', error);
           setError(error.message);
           return;
         }
         
         if (data?.session) {
-          console.log("Auth successful, redirecting");
-          // Use direct navigation instead of React Router to avoid state issues
-          window.location.href = '/dashboard';
+          console.log("Session established, redirecting to dashboard");
+          
+          // Use direct window location change instead of router to avoid history issues
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 500);
         } else {
-          console.log("No session found");
-          window.location.href = '/';
+          console.log("No session found after callback, redirecting to home");
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 500);
         }
       } catch (err) {
-        console.error('Unexpected error:', err);
+        console.error('Unexpected error in auth callback:', err);
         setError('Authentication failed. Please try again.');
       }
     };
