@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TimetablePage } from './TimetablePage';
 import { useAppContext } from '../contexts/AppContext';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -26,6 +26,8 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
     addTimetablePage,
     setTimetablePages
   } = useAppContext();
+
+  const [savingTimetables, setSavingTimetables] = useState<Record<string, boolean>>({});
 
   // Load timetables from project if projectId is provided
   useEffect(() => {
@@ -59,36 +61,72 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
     }
   };
 
-  const handlePrintPage = (id: string, isBw: boolean) => {
-    const pageToPrint = timetablePages.find(page => page.id === id);
-    if (!pageToPrint) return;
-    
-    const originalTheme = pageToPrint.theme;
-    
-    // Temporarily update the theme for printing
-    updateTimetablePage(id, { theme: isBw ? 'bw' : 'color' });
-    
-    setTimeout(() => {
-      setIsPrinting(true);
-      window.print();
-      
-      // Reset theme after printing
-      setTimeout(() => {
-        updateTimetablePage(id, { theme: originalTheme });
-      }, 500);
-    }, 100);
+  const handleSaveTimetable = async (id: string) => {
+    if (!projectId) return;
+
+    const timetable = timetablePages.find(p => p.id === id);
+    if (!timetable) return;
+
+    setSavingTimetables(prev => ({ ...prev, [id]: true }));
+
+    try {
+      await ProjectService.updateTimetable(id, {
+        stopName: timetable.stopName,
+        stopId: timetable.stopId,
+        theme: timetable.theme,
+        data: timetable.data
+      });
+      toast.success('Timetable saved successfully');
+    } catch (error) {
+      console.error('Error saving timetable:', error);
+      toast.error('Failed to save timetable');
+    } finally {
+      setSavingTimetables(prev => ({ ...prev, [id]: false }));
+    }
   };
 
   const handleThemeChange = async (id: string, theme: 'color' | 'bw') => {
     updateTimetablePage(id, { theme });
-    
+  };
+
+  const handleNewPage = async () => {
     if (projectId) {
       try {
-        await ProjectService.updateTimetable(id, { theme });
-      } catch (error) {
-        console.error('Error updating timetable theme:', error);
-        toast.error('Failed to save theme preference');
+        // For projects, create a new empty timetable
+        const newPage = {
+          stopName: 'Select a stop...',
+          stopId: '',
+          theme: 'color' as const,
+          data: []
+        };
+        
+        // First create the timetable in the database
+        const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
+        
+        if (savedTimetable) {
+          // Then add the timetable to the UI with the database UUID
+          addTimetablePage({
+            id: savedTimetable.id,
+            stopName: savedTimetable.stopName,
+            stopId: savedTimetable.stopId,
+            theme: savedTimetable.theme as 'color' | 'bw',
+            data: savedTimetable.data || []
+          });
+          toast.success('New timetable created');
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to create timetable');
       }
+    } else {
+      // For standalone mode, create a demo timetable
+      const demoData = getDemoSchedule('Demo Stop');
+      addTimetablePage({
+        id: `temp-${Date.now()}`,
+        stopName: 'Demo Stop',
+        stopId: 'demo',
+        theme: 'color',
+        data: demoData
+      });
     }
   };
 
@@ -98,7 +136,7 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
         <div className="flex flex-col items-center justify-center h-full text-gray-500">
           <p className="mb-4">No timetables yet</p>
           <button
-            onClick={() => addTimetablePage()}
+            onClick={handleNewPage}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md flex items-center gap-2 transition-colors"
             data-testid="add-first-timetable"
           >
@@ -120,8 +158,9 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
                 theme={page.theme}
                 data={filteredData[page.id] || []}
                 onRemove={() => handleRemovePage(page.id)}
-                onPrint={(isBw) => handlePrintPage(page.id, isBw)}
                 onThemeChange={(theme) => handleThemeChange(page.id, theme)}
+                onSave={projectId ? () => handleSaveTimetable(page.id) : undefined}
+                isSaving={savingTimetables[page.id]}
               />
             </CSSTransition>
           ))}

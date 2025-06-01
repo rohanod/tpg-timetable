@@ -1,4 +1,4 @@
-import { Printer, Trash2, Settings } from 'lucide-react';
+import { Printer, Trash2, Settings, Save } from 'lucide-react';
 import { StopSchedule } from '../types';
 import { TimetableTable } from './TimetableTable';
 import { useAppContext } from '../contexts/AppContext';
@@ -12,6 +12,8 @@ interface TimetablePageProps {
   onRemove: () => void;
   onPrint: (isBw: boolean) => void;
   onThemeChange: (theme: 'color' | 'bw') => void;
+  onSave?: () => Promise<void>;
+  isSaving?: boolean;
 }
 
 export const TimetablePage: React.FC<TimetablePageProps> = ({
@@ -20,8 +22,9 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
   theme,
   data,
   onRemove,
-  onPrint,
   onThemeChange,
+  onSave,
+  isSaving
 }) => {
   const { selectedTimetable, setSelectedTimetable } = useAppContext();
 
@@ -192,14 +195,31 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
         <h2 className="text-xl font-semibold text-gray-800">
           {stopName}
         </h2>
-        <button
-          onClick={() => setSelectedTimetable(isSelected ? null : id)}
-          className={`p-2 rounded-full transition-colors ${isSelected ? 'bg-orange-100 text-orange-600' : 'hover:bg-gray-100 text-gray-600'}`}
-          aria-label={isSelected ? "Hide settings" : "Show settings"}
-          title="Toggle settings"
-        >
-          <Settings size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          {onSave && (
+            <button
+              onClick={onSave}
+              disabled={isSaving}
+              className={`p-2 rounded-full transition-colors ${
+                isSaving 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'hover:bg-green-100 text-green-600'
+              }`}
+              aria-label="Save timetable"
+              title="Save timetable"
+            >
+              <Save size={20} />
+            </button>
+          )}
+          <button
+            onClick={() => setSelectedTimetable(isSelected ? null : id)}
+            className={`p-2 rounded-full transition-colors ${isSelected ? 'bg-orange-100 text-orange-600' : 'hover:bg-gray-100 text-gray-600'}`}
+            aria-label={isSelected ? "Hide settings" : "Show settings"}
+            title="Toggle settings"
+          >
+            <Settings size={20} />
+          </button>
+        </div>
       </div>
       
       <div className="table-container overflow-x-auto">
