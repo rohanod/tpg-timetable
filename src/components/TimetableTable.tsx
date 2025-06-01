@@ -1,4 +1,3 @@
-import React from 'react';
 import { StopSchedule } from '../types';
 
 interface TimetableTableProps {
@@ -51,7 +50,7 @@ export const TimetableTable: React.FC<TimetableTableProps> = ({ data, theme }) =
         ) : (
           <tr>
             <td colSpan={3} className="p-4 text-center text-gray-500">
-              {data.length === 0 ? 'No departures found.' : 'Loading schedule...'}
+              No departures found.
             </td>
           </tr>
         )}

@@ -1,9 +1,8 @@
-import React from 'react';
-import { Printer, Trash2, Settings as SettingsIcon } from 'lucide-react';
+import { Printer, Trash2, Settings } from 'lucide-react';
 import { StopSchedule } from '../types';
 import { TimetableTable } from './TimetableTable';
-import html2canvas from 'html2canvas';
 import { useAppContext } from '../contexts/AppContext';
+import html2canvas from 'html2canvas';
 
 interface TimetablePageProps {
   id: string;
@@ -53,23 +52,15 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
     }
   };
 
-  const themeClasses = {
-    border: 'border-orange-500',
-    headerBg: 'bg-orange-500',
-    headerText: 'text-white',
-    footerBg: 'bg-gray-50',
-    footerBorder: 'border-gray-300',
-    watermarkText: 'text-gray-500'
-  };
-
   const isSelected = selectedTimetable === id;
-
+  
   return (
     <div
       id={`timetable-page-${id}`}
-      className={`timetable-page border-2 ${themeClasses.border} rounded-lg mb-6 bg-white overflow-hidden shadow-lg transition-all duration-300 ${isSelected ? 'ring-2 ring-orange-300' : ''}`}
+      className={`timetable-page border-2 ${theme === 'bw' ? 'border-gray-700' : 'border-orange-500'} rounded-lg mb-6 bg-white overflow-hidden shadow-lg transition-all duration-300 ${isSelected ? 'ring-2 ring-orange-300' : ''}`}
       data-theme={theme}
       data-id={id}
+      data-testid={`timetable-${id}`}
     >
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
         <h2 className="text-xl font-semibold text-gray-800">
@@ -78,8 +69,10 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
         <button
           onClick={() => setSelectedTimetable(isSelected ? null : id)}
           className={`p-2 rounded-full transition-colors ${isSelected ? 'bg-orange-100 text-orange-600' : 'hover:bg-gray-100 text-gray-600'}`}
+          aria-label={isSelected ? "Hide settings" : "Show settings"}
+          title="Toggle settings"
         >
-          <SettingsIcon size={20} />
+          <Settings size={20} />
         </button>
       </div>
       
@@ -87,13 +80,14 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
         <TimetableTable data={data} theme={theme} />
       </div>
       
-      <div className={`page-footer flex justify-between items-center p-4 ${themeClasses.footerBg} border-t ${themeClasses.footerBorder}`}>
-        <span className={`watermark text-xs ${themeClasses.watermarkText}`}>tpg.rohanodwyer.com</span>
+      <div className={`page-footer flex justify-between items-center p-4 ${theme === 'bw' ? 'bg-gray-100' : 'bg-gray-50'} border-t border-gray-300`}>
+        <span className="watermark text-xs text-gray-500">tpg.rohanodwyer.com</span>
         
         <div className="page-actions flex flex-wrap gap-2">
           <button
             onClick={() => onPrint(false)}
             className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
+            aria-label="Print in color"
           >
             <Printer size={16} /> Print Color
           </button>
@@ -101,6 +95,7 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
           <button
             onClick={() => onPrint(true)}
             className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
+            aria-label="Print in black and white"
           >
             <Printer size={16} /> Print B&W
           </button>
@@ -108,6 +103,7 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
           <button
             onClick={exportAsImage}
             className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
+            aria-label="Export as image"
           >
             Export Image
           </button>
@@ -115,6 +111,7 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
           <button
             onClick={onRemove}
             className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
+            aria-label="Remove timetable"
           >
             <Trash2 size={16} /> Remove
           </button>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
 
 export const PrintArea: React.FC = () => {
@@ -12,7 +11,7 @@ export const PrintArea: React.FC = () => {
           className={`timetable-page-print mb-8 page-break-after ${page.theme === 'bw' ? 'print-bw-active' : 'print-color-active'}`}
         >
           <h2 className="stop-title-print text-center font-semibold text-xl p-3 border-b border-gray-300">
-            Stop: {page.stopName}
+            {page.stopName}
           </h2>
           
           <table className="w-full border-collapse table-print">
@@ -52,6 +51,9 @@ export const PrintArea: React.FC = () => {
           
           <div className="page-footer-print flex justify-between items-center p-3 border-t border-gray-300">
             <span className="watermark-print text-xs text-gray-500">tpg.rohanodwyer.com</span>
+            <span className="text-xs text-gray-500">
+              {new Date().toLocaleDateString()}
+            </span>
           </div>
         </div>
       ))}

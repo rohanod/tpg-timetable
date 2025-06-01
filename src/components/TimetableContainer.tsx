@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { TimetablePage } from './TimetablePage';
 import { useAppContext } from '../contexts/AppContext';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -11,7 +11,10 @@ interface TimetableContainerProps {
   projectId?: string;
 }
 
-export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPrinting, projectId }) => {
+export const TimetableContainer: React.FC<TimetableContainerProps> = ({ 
+  setIsPrinting, 
+  projectId 
+}) => {
   const { 
     timetablePages, 
     removeTimetablePage, 
@@ -44,6 +47,7 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
       }
     } catch (error) {
       console.error('Error loading timetables:', error);
+      toast.error('Failed to load timetables');
     }
   };
 
@@ -54,9 +58,10 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
         await ProjectService.deleteTimetable(id);
         // Then remove from UI if deletion was successful
         removeTimetablePage(id);
+        toast.success('Timetable deleted');
       } catch (error) {
         console.error('Error deleting timetable:', error);
-        toast.error('Failed to delete timetable from server');
+        toast.error('Failed to delete timetable');
       }
     } else {
       removeTimetablePage(id);
@@ -69,12 +74,14 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
     
     const originalTheme = pageToPrint.theme;
     
+    // Temporarily update the theme for printing
     updateTimetablePage(id, { theme: isBw ? 'bw' : 'color' });
     
     setTimeout(() => {
       setIsPrinting(true);
       window.print();
       
+      // Reset theme after printing
       setTimeout(() => {
         updateTimetablePage(id, { theme: originalTheme });
       }, 500);
@@ -89,46 +96,8 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
         await ProjectService.updateTimetable(id, { theme });
       } catch (error) {
         console.error('Error updating timetable theme:', error);
+        toast.error('Failed to save theme preference');
       }
-    }
-  };
-
-  const handleAddTimetable = async () => {
-    if (projectId) {
-      try {
-        const { data: userProfile } = await ProjectService.getUserPermissions();
-        
-        if (timetablePages.length >= 3) {
-          toast.error('You can only create up to 3 timetables per project. Please delete an existing timetable first.');
-          return;
-        }
-        
-        // Create timetable in the database first
-        const newPage = {
-          stopName: 'Select a stop...',
-          stopId: '',
-          theme: 'color' as const,
-          data: []
-        };
-        
-        // Create in database and get the real UUID
-        const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
-        
-        if (savedTimetable) {
-          // Add to UI with the real UUID from the database
-          addTimetablePage({
-            id: savedTimetable.id,
-            stopName: savedTimetable.stopName,
-            stopId: savedTimetable.stopId,
-            theme: savedTimetable.theme as 'color' | 'bw',
-            data: savedTimetable.data || []
-          });
-        }
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to create timetable');
-      }
-    } else {
-      addTimetablePage();
     }
   };
 
@@ -138,8 +107,9 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({ setIsPri
         <div className="flex flex-col items-center justify-center h-full text-gray-500">
           <p className="mb-4">No timetables yet</p>
           <button
-            onClick={handleAddTimetable}
+            onClick={() => addTimetablePage()}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md flex items-center gap-2 transition-colors"
+            data-testid="add-first-timetable"
           >
             <Plus size={20} /> Add Timetable
           </button>

@@ -7,34 +7,28 @@ export const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Processing authentication callback...");
-        
-        // Get the session (this will automatically process the URL)
+        // Process the callback - this automatically handles the URL
         const { data, error } = await supabase.auth.getSession();
         
-        console.log("Auth callback result:", error ? "Error" : "Success");
-        
         if (error) {
-          console.error('Auth callback error:', error);
+          console.error('Authentication callback error:', error);
           setError(error.message);
           return;
         }
         
         if (data?.session) {
-          console.log("Session established, redirecting to dashboard");
-          
-          // Use direct window location change instead of router to avoid history issues
+          // Redirect to dashboard after successful authentication
           setTimeout(() => {
             window.location.href = '/dashboard';
           }, 500);
         } else {
-          console.log("No session found after callback, redirecting to home");
+          // If no session was established, redirect back to home
           setTimeout(() => {
             window.location.href = '/';
           }, 500);
         }
       } catch (err) {
-        console.error('Unexpected error in auth callback:', err);
+        console.error('Unexpected error during authentication:', err);
         setError('Authentication failed. Please try again.');
       }
     };
@@ -62,7 +56,7 @@ export const AuthCallback = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4" role="status"></div>
         <p className="text-gray-600">Completing authentication...</p>
       </div>
     </div>

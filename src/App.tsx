@@ -1,45 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { Calendar, UserCircle } from 'lucide-react';
+
+// Components
 import { Dashboard } from './components/Dashboard';
 import { ProjectEditor } from './components/ProjectEditor';
 import { AuthModal } from './components/AuthModal';
 import { AuthCallback } from './components/AuthCallback';
+
+// Services
 import { AuthService } from './services/auth';
-import { Toaster } from 'react-hot-toast';
-import { UserCircle, Calendar } from 'lucide-react';
 
 function App() {
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      console.log("Initial auth check...");
+    const verifyAuth = async () => {
       try {
-        const authenticated = await AuthService.isAuthenticated();
-        console.log("Authentication result:", authenticated);
+        const authStatus = await AuthService.isAuthenticated();
+        setIsAuthenticated(authStatus);
         
-        setIsAuthenticated(authenticated);
-        if (!authenticated) {
-          setShowAuthModal(true);
+        if (!authStatus) {
+          setAuthModalOpen(true);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Authentication verification failed:', error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkAuth();
+    verifyAuth();
   }, []);
 
   const handleLogout = async () => {
     try {
       await AuthService.logout();
-      // Redirect is handled in the service
+      // Redirect handled in the service
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout failed:', error);
     }
   };
 
@@ -52,10 +54,10 @@ function App() {
   }
 
   return (
-    <Router>
+    <BrowserRouter>
       <div className="min-h-screen bg-white flex flex-col">
         {!isAuthenticated && (
-          <div className="bg-white shadow-sm print:hidden">
+          <header className="bg-white shadow-sm print:hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center">
@@ -63,28 +65,29 @@ function App() {
                   <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
                 </div>
                 <button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={() => setAuthModalOpen(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  aria-label="Sign In"
                 >
                   <UserCircle size={20} />
                   Sign In
                 </button>
               </div>
             </div>
-          </div>
+          </header>
         )}
 
         <Routes>
-          {/* Auth callback route - accessible to all */}
+          {/* Public route - Auth callback */}
           <Route path="/auth/callback" element={<AuthCallback />} />
           
           {/* Protected routes */}
           {isAuthenticated ? (
             <>
-              <Route path="/dashboard\" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/project/:projectId" element={<ProjectEditor />} />
-              <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>
           ) : (
             <>
@@ -100,7 +103,7 @@ function App() {
                     </p>
                     <div className="flex flex-col space-y-4">
                       <button
-                        onClick={() => setShowAuthModal(true)}
+                        onClick={() => setAuthModalOpen(true)}
                         className="px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors w-full"
                       >
                         Sign In to Continue
@@ -112,16 +115,15 @@ function App() {
                   </div>
                 </div>
               } />
-              <Route path="*" element={<Navigate to="/\" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
         </Routes>
         
         <AuthModal 
-          isOpen={showAuthModal} 
+          isOpen={authModalOpen} 
           onClose={() => {
-            setShowAuthModal(false);
-            // Check if the user is authenticated after the modal is closed
+            setAuthModalOpen(false);
             AuthService.isAuthenticated().then(authenticated => {
               setIsAuthenticated(authenticated);
               if (authenticated) {
@@ -130,9 +132,10 @@ function App() {
             });
           }} 
         />
+
         <Toaster position="top-right" />
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, LogOut, Calendar } from 'lucide-react';
 import { ProjectService } from '../services/projects';
 import { Project, UserProfile } from '../types';
 import { AuthService } from '../services/auth';
 import { toast } from 'react-hot-toast';
-import { ErrorBoundary } from '../components/ErrorBoundary';
+import { ErrorBoundary } from './ErrorBoundary';
 
 export const Dashboard: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -15,15 +15,13 @@ export const Dashboard: React.FC = () => {
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadDashboardData();
   }, []);
 
-  const loadData = async () => {
+  const loadDashboardData = async () => {
     try {
-      console.log("Loading dashboard data...");
       const isAuth = await AuthService.isAuthenticated();
       if (!isAuth) {
-        console.log("User not authenticated, redirecting to home");
         window.location.href = '/';
         return;
       }
@@ -33,7 +31,6 @@ export const Dashboard: React.FC = () => {
         AuthService.getUserProfile()
       ]);
       
-      console.log(`Loaded ${projectsData.length} projects`);
       setProjects(projectsData);
       setUserProfile(profile);
       setError(null);
@@ -59,7 +56,7 @@ export const Dashboard: React.FC = () => {
       setShowNewProjectDialog(false);
       toast.success('Project created successfully');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to create project');
     }
   };
 
@@ -70,8 +67,8 @@ export const Dashboard: React.FC = () => {
       await ProjectService.deleteProject(projectId);
       setProjects(prev => prev.filter(p => p.id !== projectId));
       toast.success('Project deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete project');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete project');
     }
   };
 
@@ -84,16 +81,10 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleRetry = () => {
-    setIsLoading(true);
-    setError(null);
-    loadData();
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white" role="status">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" data-testid="dashboard-loader"></div>
       </div>
     );
   }
@@ -101,11 +92,15 @@ export const Dashboard: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center" role="alert">
           <h2 className="text-xl font-bold mb-4 text-red-600">Error Loading Dashboard</h2>
           <p className="text-gray-700 mb-4">{error}</p>
           <button
-            onClick={handleRetry}
+            onClick={() => {
+              setIsLoading(true);
+              setError(null);
+              loadDashboardData();
+            }}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
           >
             Retry
@@ -141,15 +136,14 @@ export const Dashboard: React.FC = () => {
                 <h1 className="text-xl font-semibold text-gray-900">Bus Timetable Generator</h1>
               </div>
               
-              <div className="flex items-center">
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <LogOut size={18} />
-                  Sign Out
-                </button>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                aria-label="Sign Out"
+              >
+                <LogOut size={18} />
+                Sign Out
+              </button>
             </div>
           </div>
         </header>
@@ -170,6 +164,7 @@ export const Dashboard: React.FC = () => {
                     className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md flex items-center gap-2 cursor-not-allowed"
                     disabled
                     title="You can only create one project"
+                    aria-disabled="true"
                   >
                     <Plus size={20} />
                     New Project
@@ -179,6 +174,7 @@ export const Dashboard: React.FC = () => {
                 <button
                   onClick={() => setShowNewProjectDialog(true)}
                   className="mt-4 sm:mt-0 px-4 py-2 bg-orange-500 text-white rounded-md flex items-center gap-2 hover:bg-orange-600 transition-colors shadow-sm"
+                  data-testid="new-project-button"
                 >
                   <Plus size={20} />
                   New Project
@@ -200,6 +196,7 @@ export const Dashboard: React.FC = () => {
                 <button
                   onClick={() => setShowNewProjectDialog(true)}
                   className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  data-testid="create-first-project-button"
                 >
                   <Plus className="-ml-1 mr-2 h-5 w-5" />
                   Create First Project
@@ -212,6 +209,7 @@ export const Dashboard: React.FC = () => {
                 <div 
                   key={project.id} 
                   className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden"
+                  data-testid={`project-card-${project.id}`}
                 >
                   <div className="p-6">
                     <div className="flex justify-between items-start">
@@ -220,6 +218,7 @@ export const Dashboard: React.FC = () => {
                         onClick={() => handleDeleteProject(project.id)}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                         title="Delete project"
+                        aria-label={`Delete project ${project.name}`}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -242,7 +241,7 @@ export const Dashboard: React.FC = () => {
           )}
 
           {showNewProjectDialog && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true">
               <div className="bg-white rounded-lg p-6 w-full max-w-md">
                 <h2 className="text-xl font-semibold mb-4">Create New Project</h2>
                 <input
@@ -252,6 +251,7 @@ export const Dashboard: React.FC = () => {
                   placeholder="Enter project name"
                   className="w-full p-2.5 border rounded-md mb-4 focus:ring-2 focus:ring-orange-300 focus:border-orange-500"
                   autoFocus
+                  data-testid="new-project-name-input"
                 />
                 <div className="flex justify-end gap-2">
                   <button
@@ -263,6 +263,7 @@ export const Dashboard: React.FC = () => {
                   <button
                     onClick={handleCreateProject}
                     className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                    data-testid="create-project-submit"
                   >
                     Create Project
                   </button>

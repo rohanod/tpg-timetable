@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { TimetablePageData, StopSchedule, BusFilter } from '../types';
 
 interface AppContextType {
@@ -64,6 +64,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       delete newData[id];
       return newData;
     });
+    
     if (selectedTimetable === id) {
       setSelectedTimetable(null);
     }
@@ -85,7 +86,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const addBusFilter = (filter: BusFilter) => {
-    setBusFilters(prev => [...prev, filter]);
+    // Check if a filter with this number already exists
+    const exists = busFilters.some(f => f.number === filter.number);
+    if (!exists) {
+      setBusFilters(prev => [...prev, filter]);
+    }
   };
 
   const removeBusFilter = (id: string) => {
@@ -101,17 +106,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Apply filters whenever they change
   useEffect(() => {
     timetablePages.forEach(page => {
-      if (!page.data) return;
+      if (!page.data || page.data.length === 0) return;
       
       const originalData = page.data;
-      let filteredResult = [...originalData];
-      
-      // Limit to 11 rows
-      filteredResult = filteredResult.slice(0, 11);
+      let filtered = [...originalData];
       
       // Apply bus filters
       if (busFilters.length > 0) {
-        filteredResult = filteredResult.filter(item =>
+        filtered = filtered.filter(item =>
           busFilters.some(filter => {
             const numberMatch = filter.number === item.busNumber;
             const directionMatch = !filter.direction || filter.direction === item.destination;
@@ -122,10 +124,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       
       // Apply time filter
       if (timeFilter) {
-        filteredResult = filteredResult.filter(item => item.time >= timeFilter);
+        filtered = filtered.filter(item => item.time >= timeFilter);
       }
       
-      updateFilteredData(page.id, filteredResult);
+      // Limit to 11 rows for display
+      filtered = filtered.slice(0, 11);
+      
+      updateFilteredData(page.id, filtered);
     });
   }, [busFilters, timeFilter, timetablePages]);
 

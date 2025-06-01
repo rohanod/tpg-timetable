@@ -24,7 +24,7 @@ describe('App', () => {
     
     render(<App />);
     
-    expect(screen.getByRole('status') || screen.getByTestId('loading-spinner')).toBeInTheDocument();
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
   it('should show sign in button when not authenticated', async () => {

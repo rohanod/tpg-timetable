@@ -7,10 +7,10 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase environment variables');
+  console.warn('Missing Supabase environment variables. Using fallback values for development.');
 }
 
-// Create Supabase client with minimal configuration
+// Create Supabase client
 export const supabase = createClient(
   supabaseUrl || 'https://your-project.supabase.co',
   supabaseKey || 'your-anon-key'
@@ -19,14 +19,11 @@ export const supabase = createClient(
 export const AuthService = {
   // Check if user is authenticated
   isAuthenticated: async (): Promise<boolean> => {
-    console.log("Checking auth status...");
     try {
       const { data } = await supabase.auth.getSession();
-      const isAuth = !!data.session;
-      console.log("Auth status:", isAuth ? "authenticated" : "not authenticated");
-      return isAuth;
+      return !!data.session;
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('Authentication check failed:', error);
       return false;
     }
   },
@@ -37,7 +34,6 @@ export const AuthService = {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.log("No user found when getting profile");
         return null;
       }
 
@@ -49,7 +45,6 @@ export const AuthService = {
         .single();
 
       if (error || !profile) {
-        console.log("No profile found, creating new profile");
         // Create a profile if it doesn't exist
         const newProfile = {
           id: user.id,
@@ -89,17 +84,15 @@ export const AuthService = {
       });
       
       if (error) {
-        toast.error(error.message);
         throw error;
       }
       
       // Verify session was created successfully
       if (!data.session) {
-        throw new Error('No session created during login');
+        throw new Error('Authentication failed - no session created');
       }
       
       toast.success('Logged in successfully!');
-      // Use direct navigation to avoid Router issues
       window.location.href = '/dashboard';
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
@@ -119,7 +112,6 @@ export const AuthService = {
       });
       
       if (error) {
-        toast.error(error.message);
         throw error;
       }
       
@@ -136,12 +128,10 @@ export const AuthService = {
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        toast.error(error.message);
         throw error;
       }
       
       toast.success('Logged out successfully');
-      // Use direct navigation to avoid Router issues
       window.location.href = '/';
     } catch (error: any) {
       toast.error(error.message || 'Logout failed');

@@ -1,9 +1,11 @@
+// Stop schedule represents a single bus/tram departure
 export interface StopSchedule {
   time: string;
   busNumber: string;
   destination: string;
 }
 
+// Timetable page data structure
 export interface TimetablePageData {
   id: string;
   stopName: string;
@@ -12,6 +14,7 @@ export interface TimetablePageData {
   data: StopSchedule[];
 }
 
+// API response structures
 export interface StopSuggestion {
   label: string;
   id?: string;
@@ -44,12 +47,14 @@ export interface StationboardResponse {
   }>;
 }
 
+// Bus/tram filter 
 export interface BusFilter {
   id: string;
   number: string;
   direction?: string;
 }
 
+// Database models
 export interface Project {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, Clock, FileDown, Plus, X, Filter } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { searchStops, fetchStationboard, getDemoSchedule } from '../services/api';
@@ -37,8 +37,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [userCanAddTimetable, setUserCanAddTimetable] = useState(true);
   const [updateTimerId, setUpdateTimerId] = useState<NodeJS.Timeout | null>(null);
+  
   const busInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
+  // Check timetable limit on component load
   useEffect(() => {
     if (projectId) {
       checkTimetableLimit();
@@ -49,12 +52,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   useEffect(() => {
     if (!selectedTimetable) return;
     
-    // Clear any existing timer
     if (updateTimerId) {
       clearTimeout(updateTimerId);
     }
     
-    // Set new timer for auto-update
     const timerId = setTimeout(() => {
       handleUpdateFilters();
     }, 2000);
@@ -65,6 +66,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       if (updateTimerId) clearTimeout(updateTimerId);
     };
   }, [timeInput, busFilters, selectedTimetable]);
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const checkTimetableLimit = async () => {
     try {
@@ -105,10 +120,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     setShowSuggestions(false);
     setSearchTerm(stop.label);
     
-    const targetPage = selectedTimetable || (timetablePages.length === 0 ? null : timetablePages[timetablePages.length - 1].id);
+    const targetPage = selectedTimetable || (timetablePages.length > 0 ? timetablePages[timetablePages.length - 1].id : null);
     
     if (!targetPage) {
-      // When creating a new standalone timetable (not connected to a project)
+      // Create a new standalone timetable if none selected and none exist
       addTimetablePage({
         id: `temp-${Date.now()}`,
         stopName: stop.label,
@@ -127,6 +142,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       
       if (scheduleData.length === 0) {
         scheduleData = getDemoSchedule(stop.label);
+        toast.info('Using demo data as no real schedule was found');
       }
       
       updateTimetablePage(targetPage, {
@@ -147,6 +163,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       }
     } catch (error) {
       console.error('Error fetching schedule:', error);
+      toast.error('Failed to fetch schedule data');
+      
+      // Use demo data as fallback
       const demoData = getDemoSchedule(stop.label);
       updateTimetablePage(targetPage, {
         stopName: stop.label,
@@ -225,6 +244,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       }
     } catch (error) {
       console.error('Error updating schedule:', error);
+      toast.error('Failed to update schedule');
     } finally {
       setIsUpdating(false);
     }
@@ -232,7 +252,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
 
   const handleNewPage = async () => {
     if (!userCanAddTimetable && projectId) {
-      toast.error('You can only create up to 3 timetables per project. Please delete an existing timetable first.');
+      toast.error('You can only create up to 3 timetables per project');
       return;
     }
     
@@ -258,30 +278,31 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
             theme: savedTimetable.theme as 'color' | 'bw',
             data: savedTimetable.data || []
           });
+          toast.success('New timetable created');
         }
       } catch (error: any) {
         toast.error(error.message || 'Failed to create timetable');
       }
     } else {
-      // For standalone mode, just create a demo timetable
-      const demoData = getDemoSchedule('Bouchet');
-      const newPage = {
+      // For standalone mode, create a demo timetable
+      const demoData = getDemoSchedule('Demo Stop');
+      addTimetablePage({
         id: `temp-${Date.now()}`,
-        stopName: 'Bouchet',
-        stopId: 'bouchet',
+        stopName: 'Demo Stop',
+        stopId: 'demo',
         theme: 'color',
         data: demoData
-      };
-      
-      addTimetablePage(newPage);
+      });
     }
   };
 
   const handlePrintAllPDF = () => {
     if (timetablePages.length === 0) {
-      toast.error('No timetables to export.');
+      toast.error('No timetables to export');
       return;
     }
+    
+    // Use the browser's print functionality
     window.print();
   };
 
@@ -297,16 +318,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
                 value={searchInput}
                 onChange={handleSearchChange}
                 className="p-2 pl-9 border border-gray-300 rounded-md text-sm w-full bg-white"
+                aria-label="Search for bus or tram stop"
               />
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               
               {showSuggestions && stopSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg z-20 max-h-60 overflow-y-auto"
+                  data-testid="stop-suggestions"
+                >
                   {stopSuggestions.map((stop, index) => (
                     <div
                       key={index}
                       className="p-2 hover:bg-orange-50 cursor-pointer"
                       onClick={() => handleStopSelection(stop)}
+                      data-testid={`stop-suggestion-${index}`}
                     >
                       {stop.label}
                     </div>
@@ -319,8 +346,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
           <button
             onClick={() => setShowFiltersPanel(!showFiltersPanel)}
             className={`px-3 py-2 ${showFiltersPanel ? 'bg-orange-600' : 'bg-orange-500 hover:bg-orange-600'} text-white rounded-md text-sm flex items-center gap-1.5 transition-colors`}
+            aria-expanded={showFiltersPanel}
+            aria-controls="filters-panel"
           >
-            <Filter size={18} /> Filters {busFilters.length > 0 && `(${busFilters.length})`}
+            <Filter size={18} /> 
+            Filters {busFilters.length > 0 && `(${busFilters.length})`}
           </button>
           
           <button
@@ -328,6 +358,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
             className={`px-3 py-2 ${!userCanAddTimetable ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'} text-white rounded-md text-sm flex items-center gap-1.5 transition-colors`}
             disabled={!userCanAddTimetable}
             title={!userCanAddTimetable ? 'You can only create 3 timetables' : 'Add new timetable'}
+            data-testid="new-timetable-button"
           >
             <Plus size={18} /> New Timetable
           </button>
@@ -335,13 +366,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
           <button
             onClick={handlePrintAllPDF}
             className="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
+            aria-label="Export as PDF"
+            data-testid="export-pdf-button"
           >
             <FileDown size={18} /> Export PDF
           </button>
         </div>
 
         {showFiltersPanel && (
-          <div className="filters-panel bg-orange-50 p-4 rounded-lg">
+          <div id="filters-panel" className="filters-panel bg-orange-50 p-4 rounded-lg" data-testid="filters-panel">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <h3 className="text-sm font-semibold text-gray-700">Bus/Tram Filters</h3>
@@ -354,6 +387,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
                     onChange={(e) => setBusInput(e.target.value)}
                     onKeyDown={handleBusInputKeyDown}
                     className="p-2 border border-gray-300 rounded-md text-sm bg-white flex-grow"
+                    aria-label="Enter bus or tram number to filter"
                   />
                   <button
                     onClick={() => {
@@ -366,16 +400,18 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
                       }
                     }}
                     className="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm"
+                    aria-label="Add bus filter"
                   >
                     Add
                   </button>
                 </div>
                 
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap" data-testid="bus-filters-list">
                   {busFilters.map(filter => (
                     <div
                       key={filter.id}
                       className="flex items-center bg-white rounded-lg px-3 py-2 text-sm shadow-sm"
+                      data-testid={`bus-filter-${filter.number}`}
                     >
                       <span className="font-medium">{filter.number}</span>
                       {filter.direction && (
@@ -385,12 +421,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
                         <button
                           onClick={() => handleFilterSettings(filter.id)}
                           className="p-1 hover:bg-gray-100 rounded"
+                          aria-label={`Set direction for bus ${filter.number}`}
                         >
                           <Filter size={14} />
                         </button>
                         <button
                           onClick={() => removeBusFilter(filter.id)}
                           className="p-1 hover:bg-gray-100 rounded text-red-500"
+                          aria-label={`Remove filter for bus ${filter.number}`}
                         >
                           <X size={14} />
                         </button>
@@ -435,12 +473,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
                       value={timeInput}
                       onChange={handleTimeFilterChange}
                       className="p-2 pl-9 border border-gray-300 rounded-md text-sm w-full bg-white"
+                      aria-label="Time filter"
                     />
                     <Clock className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </div>
                   
                   {isUpdating && (
-                    <span className="text-sm text-gray-500 animate-pulse ml-2">
+                    <span className="text-sm text-gray-500 animate-pulse ml-2" aria-live="polite">
                       Updating...
                     </span>
                   )}
