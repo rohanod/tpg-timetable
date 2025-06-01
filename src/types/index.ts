@@ -70,3 +70,8 @@ export interface UserProfile {
   avatar_url?: string;
   full_name?: string;
 }
+
+export interface AuthError extends Error {
+  message: string;
+  status?: number;
+}

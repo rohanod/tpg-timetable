@@ -82,50 +82,87 @@ export const AuthService = {
   
   // Email/Password login
   login: async (email: string, password: string): Promise<void> => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      
+      // Verify session was created successfully
+      if (!data.session) {
+        throw new Error('No session created during login');
+      }
+      
+      toast.success('Logged in successfully!');
+      // Use direct navigation to avoid Router issues
+      window.location.href = '/dashboard';
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed');
       throw error;
     }
-    
-    toast.success('Logged in successfully!');
-    // Use direct navigation to avoid Router issues
-    window.location.href = '/dashboard';
   },
   
   // Email/Password registration
   register: async (email: string, password: string): Promise<void> => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        throw error;
       }
-    });
-    
-    if (error) {
-      toast.error(error.message);
+      
+      toast.success('Check your email to confirm your account!');
+    } catch (error: any) {
+      toast.error(error.message || 'Registration failed');
       throw error;
     }
-    
-    toast.success('Check your email to confirm your account!');
   },
   
   // Sign out
   logout: async (): Promise<void> => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      
+      toast.success('Logged out successfully');
+      // Use direct navigation to avoid Router issues
+      window.location.href = '/';
+    } catch (error: any) {
+      toast.error(error.message || 'Logout failed');
       throw error;
     }
-    
-    toast.success('Logged out successfully');
-    // Use direct navigation to avoid Router issues
-    window.location.href = '/';
+  },
+  
+  // Refresh the session if needed
+  refreshSession: async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error || !data.session) {
+        console.error('Session refresh failed:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Session refresh error:', error);
+      return false;
+    }
   }
 };

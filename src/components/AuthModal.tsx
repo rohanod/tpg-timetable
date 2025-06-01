@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { supabase, AuthService } from '../services/auth';
 
@@ -13,6 +13,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  
+  // Clear form state when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setError('');
+    } else {
+      // Reset form state when modal closes
+      setTimeout(() => {
+        setEmail('');
+        setPassword('');
+        setError('');
+        setIsLoading(false);
+      }, 300);
+    }
+  }, [isOpen]);
 
   const handleEmailPasswordAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +43,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       onClose();
     } catch (error: any) {
       setError(error.message || 'An error occurred');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -64,6 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close"
+            disabled={isLoading}
           >
             <X size={20} />
           </button>
