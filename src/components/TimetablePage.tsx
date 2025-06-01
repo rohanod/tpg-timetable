@@ -52,6 +52,132 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
     }
   };
 
+  const handlePrint = (isBw: boolean) => {
+    // Open print view in new tab
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Print Timetable - ${stopName}</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 1cm;
+            }
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: system-ui, -apple-system, sans-serif;
+            }
+            .timetable-container {
+              width: 100%;
+              max-width: 800px;
+              margin: 0 auto;
+              border: 2px solid ${isBw ? '#333' : '#FF5A00'};
+              border-radius: 8px;
+              overflow: hidden;
+            }
+            .stop-name {
+              padding: 15px;
+              font-size: 24px;
+              font-weight: 600;
+              text-align: center;
+              border-bottom: 1px solid #ddd;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th {
+              background: ${isBw ? '#333' : '#FF5A00'};
+              color: white;
+              padding: 12px;
+              text-align: center;
+              font-size: 14px;
+            }
+            td {
+              padding: 12px;
+              border: 1px solid ${isBw ? '#333' : '#ddd'};
+              font-size: 14px;
+            }
+            tr:nth-child(even) {
+              background: ${isBw ? '#f0f0f0' : '#f9fafb'};
+            }
+            .footer {
+              padding: 12px;
+              border-top: 1px solid #ddd;
+              display: flex;
+              justify-content: space-between;
+              font-size: 12px;
+              color: #666;
+            }
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="timetable-container">
+            <div class="stop-name">${stopName}</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 25%">Time</th>
+                  <th style="width: 25%">Bus/Tram Number</th>
+                  <th style="width: 50%; text-align: left">Destination</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.map(item => `
+                  <tr>
+                    <td style="text-align: center">${item.time}</td>
+                    <td style="text-align: center">${item.busNumber}</td>
+                    <td>${item.destination}</td>
+                  </tr>
+                `).join('')}
+                ${data.length === 0 ? `
+                  <tr>
+                    <td colspan="3" style="text-align: center; color: #666">
+                      No departures found.
+                    </td>
+                  </tr>
+                ` : ''}
+              </tbody>
+            </table>
+            <div class="footer">
+              <span>tpg.rohanodwyer.com</span>
+              <span>${new Date().toLocaleDateString()}</span>
+            </div>
+          </div>
+          <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print()" style="
+              padding: 10px 20px;
+              background: #FF5A00;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 16px;
+            ">
+              Print Timetable
+            </button>
+          </div>
+          <script>
+            // Auto-print
+            window.onload = () => window.print();
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
+
   const isSelected = selectedTimetable === id;
   
   return (
@@ -85,7 +211,7 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
         
         <div className="page-actions flex flex-wrap gap-2">
           <button
-            onClick={() => onPrint(false)}
+            onClick={() => handlePrint(false)}
             className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
             aria-label="Print in color"
           >
@@ -93,7 +219,7 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
           </button>
           
           <button
-            onClick={() => onPrint(true)}
+            onClick={() => handlePrint(true)}
             className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm flex items-center gap-1.5 transition-colors"
             aria-label="Print in black and white"
           >
