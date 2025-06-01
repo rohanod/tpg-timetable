@@ -45,8 +45,8 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white" role="status">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" data-testid="loading-spinner"></div>
       </div>
     );
   }
@@ -81,10 +81,10 @@ function App() {
           {/* Protected routes */}
           {isAuthenticated ? (
             <>
-              <Route path="/dashboard\" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/project/:projectId" element={<ProjectEditor />} />
-              <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>
           ) : (
             <>
@@ -112,7 +112,7 @@ function App() {
                   </div>
                 </div>
               } />
-              <Route path="*" element={<Navigate to="/\" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
         </Routes>
