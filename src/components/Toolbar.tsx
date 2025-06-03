@@ -156,8 +156,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       if (projectId) {
         // Update in database if we're in a project
         await ProjectService.updateTimetable(targetPage, {
+          id: targetPage,
           stopName: stop.label,
           stopId: stop.id || '',
+          theme: 'color',
           data: scheduleData
         });
       }

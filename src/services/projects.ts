@@ -142,23 +142,27 @@ export const ProjectService = {
       throw new Error('Project ID is required');
     }
     
-    // Check timetable limit
-    const { data: existingTimetables } = await supabase
+    const { data: existingTimetables, error: checkError } = await supabase
       .from('timetables')
       .select('id')
       .eq('project_id', projectId);
+
+    if (checkError) {
+      console.error('Error checking timetables:', checkError);
+      throw checkError;
+    }
 
     if (existingTimetables && existingTimetables.length >= 3) {
       throw new Error('You can only create three timetables per project');
     }
 
-    // Create a new timetable
     const newTimetable = {
       project_id: projectId,
       stopName: timetable.stopName || 'New Timetable',
       stopId: timetable.stopId || '',
       theme: timetable.theme || 'color',
-      data: timetable.data || []
+      data: timetable.data || [],
+      created_at: new Date().toISOString()
     };
 
     const { data, error } = await supabase
@@ -167,7 +171,7 @@ export const ProjectService = {
       .select()
       .single();
 
-    if (error) {
+    if (error || !data) {
       console.error('Error adding timetable:', error);
       throw error;
     }
@@ -184,22 +188,35 @@ export const ProjectService = {
       throw new Error('Timetable ID is required');
     }
     
-    // Skip temporary IDs
     if (timetableId.startsWith('temp-')) {
       return;
     }
 
-    // Remove id from updates if present
     const { id, ...updatesWithoutId } = updates as any;
 
-    const { error } = await supabase
+    const { data: existingTimetable, error: checkError } = await supabase
+      .from('timetables')
+      .select('id')
+      .eq('id', timetableId)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking timetable:', checkError);
+      throw checkError;
+    }
+
+    if (!existingTimetable) {
+      throw new Error('Timetable not found');
+    }
+
+    const { error: updateError } = await supabase
       .from('timetables')
       .update(updatesWithoutId)
       .eq('id', timetableId);
 
-    if (error) {
-      console.error('Error updating timetable:', error);
-      throw error;
+    if (updateError) {
+      console.error('Error updating timetable:', updateError);
+      throw updateError;
     }
   },
 
