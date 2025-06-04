@@ -251,4 +251,4 @@ export const ProjectService = {
       throw error;
     }
   }
-}
+};

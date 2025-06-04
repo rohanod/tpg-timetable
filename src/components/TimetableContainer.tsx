@@ -6,7 +6,6 @@ import { Plus } from 'lucide-react';
 import { ProjectService } from '../services/projects';
 import { toast } from 'react-hot-toast';
 import { Timetable } from '../types';
-import { supabase } from '../services/auth';
 
 interface TimetableContainerProps {
   setIsPrinting: (isPrinting: boolean) => void;
@@ -71,51 +70,12 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
     setSavingTimetables(prev => ({ ...prev, [id]: true }));
 
     try {
-      // First check if the timetable exists in the database
-      const { data: existingTimetable, error: checkError } = await supabase
-        .from('timetables')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
-        throw checkError;
-      }
-
-      let result;
-      if (!existingTimetable) {
-        // If timetable doesn't exist, insert it
-        result = await supabase
-          .from('timetables')
-          .insert([{
-            id,
-            project_id: projectId,
-            stopName: timetable.stopName,
-            stopId: timetable.stopId,
-            theme: timetable.theme,
-            data: timetable.data
-          }])
-          .select()
-          .single();
-      } else {
-        // If timetable exists, update it
-        result = await supabase
-          .from('timetables')
-          .update({
-            stopName: timetable.stopName,
-            stopId: timetable.stopId,
-            theme: timetable.theme,
-            data: timetable.data
-          })
-          .eq('id', id)
-          .select()
-          .single();
-      }
-
-      if (result.error) {
-        throw result.error;
-      }
-
+      await ProjectService.updateTimetable(id, {
+        stopName: timetable.stopName,
+        stopId: timetable.stopId,
+        theme: timetable.theme,
+        data: timetable.data
+      });
       toast.success('Timetable saved successfully');
     } catch (error) {
       console.error('Error saving timetable:', error);
