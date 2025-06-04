@@ -53,7 +53,6 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
   };
 
   const handlePrint = (isBw: boolean) => {
-    // Open print view in new tab
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -64,21 +63,23 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
           <title>Print Timetable - ${stopName}</title>
           <style>
             @page {
-              size: A4;
+              size: A4 portrait;
               margin: 1cm;
             }
             body {
               margin: 0;
               padding: 20px;
               font-family: system-ui, -apple-system, sans-serif;
+              background: white;
             }
             .timetable-container {
               width: 100%;
               max-width: 800px;
               margin: 0 auto;
-              border: 2px solid ${isBw ? '#333' : '#FF5A00'};
+              border: 2px solid ${isBw ? '#333' : '#f97316'};
               border-radius: 8px;
               overflow: hidden;
+              background: white;
             }
             .stop-name {
               padding: 15px;
@@ -86,13 +87,15 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
               font-weight: 600;
               text-align: center;
               border-bottom: 1px solid #ddd;
+              background: white;
             }
             table {
               width: 100%;
               border-collapse: collapse;
+              background: white;
             }
             th {
-              background: ${isBw ? '#333' : '#FF5A00'};
+              background: ${isBw ? '#333' : '#f97316'};
               color: white;
               padding: 12px;
               text-align: center;
@@ -100,11 +103,14 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
             }
             td {
               padding: 12px;
-              border: 1px solid ${isBw ? '#333' : '#ddd'};
+              border: 1px solid ${isBw ? '#333' : '#e5e7eb'};
               font-size: 14px;
             }
             tr:nth-child(even) {
               background: ${isBw ? '#f0f0f0' : '#f9fafb'};
+            }
+            tr:nth-child(odd) {
+              background: white;
             }
             .footer {
               padding: 12px;
@@ -113,10 +119,19 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
               justify-content: space-between;
               font-size: 12px;
               color: #666;
+              background: white;
             }
             @media print {
-              body { padding: 0; }
+              body {
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
               .no-print { display: none; }
+              .timetable-container {
+                border: none;
+                box-shadow: none;
+              }
             }
           </style>
         </head>
@@ -156,19 +171,26 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
           <div class="no-print" style="text-align: center; margin-top: 20px;">
             <button onclick="window.print()" style="
               padding: 10px 20px;
-              background: #FF5A00;
+              background: #f97316;
               color: white;
               border: none;
               border-radius: 4px;
               cursor: pointer;
               font-size: 16px;
+              transition: background-color 0.2s;
+            ">
+              Print Timetable
+            </button>
+            <p style="margin-top: 10px; color: #666; font-size: 14px;">
+              Click the button above or press Ctrl/Cmd + P to print
+            </p>
             ">
               Print Timetable
             </button>
           </div>
           <script>
-            // Auto-print
-            window.onload = () => window.print();
+            // Print dialog on load with slight delay
+            window.onload = () => setTimeout(() => window.print(), 500);
           </script>
         </body>
       </html>
