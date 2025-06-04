@@ -1,47 +1,35 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, LogOut, Calendar } from 'lucide-react';
-import { ProjectService } from '../services/projects';
-import { Project, UserProfile } from '../types';
-import { AuthService } from '../services/auth';
+import { useGetProjects, useCreateProject, useDeleteProject } from '../services/projects';
+import { Project } from '../types';
+import { useAuth0 } from '@auth0/auth0-react';
 import { toast } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useStoreUserEffect } from '../services/auth';
+import { useConvexAuth } from 'convex/react';
 
 export const Dashboard: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { logout } = useAuth0();
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const userStatus = useStoreUserEffect();
+  
+  const projects = useGetProjects();
+  const createProject = useCreateProject();
+  const deleteProject = useDeleteProject();
+  
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState('');
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      const isAuth = await AuthService.isAuthenticated();
-      if (!isAuth) {
-        window.location.href = '/';
-        return;
-      }
-
-      const [projectsData, profile] = await Promise.all([
-        ProjectService.getProjects(),
-        AuthService.getUserProfile()
-      ]);
-      
-      setProjects(projectsData);
-      setUserProfile(profile);
-      setError(null);
-    } catch (error: any) {
-      console.error('Error loading dashboard data:', error);
-      setError(error.message || 'Failed to load dashboard data');
-      toast.error('Failed to load dashboard');
-    } finally {
-      setIsLoading(false);
+    // Update loading state based on both auth and projects data
+    setIsLoading(authLoading || userStatus.isLoading || projects === undefined);
+    
+    if (!authLoading && !userStatus.isLoading && !userStatus.isAuthenticated) {
+      window.location.href = '/';
     }
-  };
+  }, [authLoading, userStatus, projects]);
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) {
@@ -50,8 +38,7 @@ export const Dashboard: React.FC = () => {
     }
 
     try {
-      const project = await ProjectService.createProject(newProjectName);
-      setProjects(prev => [project, ...prev]);
+      await createProject({ name: newProjectName });
       setNewProjectName('');
       setShowNewProjectDialog(false);
       toast.success('Project created successfully');
@@ -64,8 +51,7 @@ export const Dashboard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
 
     try {
-      await ProjectService.deleteProject(projectId);
-      setProjects(prev => prev.filter(p => p.id !== projectId));
+      await deleteProject({ projectId });
       toast.success('Project deleted successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete project');
@@ -74,8 +60,11 @@ export const Dashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await AuthService.logout();
-      // Redirect is handled in the service
+      logout({ 
+        logoutParams: {
+          returnTo: window.location.origin
+        }
+      });
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -99,7 +88,8 @@ export const Dashboard: React.FC = () => {
             onClick={() => {
               setIsLoading(true);
               setError(null);
-              loadDashboardData();
+              // Reload page as simplest way to retry
+              window.location.reload();
             }}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
           >
@@ -110,7 +100,7 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  const canCreateProject = projects.length === 0;
+  const canCreateProject = Array.isArray(projects) && projects.length === 0;
 
   return (
     <ErrorBoundary fallback={
@@ -183,7 +173,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {projects.length === 0 ? (
+          {Array.isArray(projects) && projects.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
                 <Calendar className="h-6 w-6 text-orange-600" />
@@ -205,17 +195,17 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projects.map(project => (
+              {Array.isArray(projects) && projects.map(project => (
                 <div 
-                  key={project.id} 
+                  key={project._id} 
                   className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden"
-                  data-testid={`project-card-${project.id}`}
+                  data-testid={`project-card-${project._id}`}
                 >
                   <div className="p-6">
                     <div className="flex justify-between items-start">
                       <h3 className="text-lg font-medium text-gray-900 truncate">{project.name}</h3>
                       <button
-                        onClick={() => handleDeleteProject(project.id)}
+                        onClick={() => handleDeleteProject(project._id)}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                         title="Delete project"
                         aria-label={`Delete project ${project.name}`}
@@ -228,7 +218,7 @@ export const Dashboard: React.FC = () => {
                     </p>
                     <div className="mt-5">
                       <a
-                        href={`/project/${project.id}`}
+                        href={`/project/${project._id}`}
                         className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                       >
                         Open Project

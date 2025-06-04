@@ -3,7 +3,7 @@ import { Search, Clock, FileDown, Plus, X, Filter } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { searchStops, fetchStationboard, getDemoSchedule } from '../services/api';
 import { StopSuggestion } from '../types';
-import { ProjectService } from '../services/projects';
+import { useUpdateTimetable, useAddTimetable } from '../services/projects';
 import { toast } from 'react-hot-toast';
 
 interface ToolbarProps {
@@ -12,20 +12,22 @@ interface ToolbarProps {
 
 export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   const { 
-    addTimetablePage, 
-    timetablePages,
-    setSearchTerm,
+    timetablePages, 
+    removeTimetablePage, 
+    updateTimetablePage,
     busFilters,
     addBusFilter,
     removeBusFilter,
     updateBusFilter,
     setTimeFilter,
     selectedTimetable,
-    updateTimetablePage,
     updateFilteredData,
     setTimetablePages,
     timeFilter
   } = useAppContext();
+  
+  const updateTimetableMutation = useUpdateTimetable();
+  const addTimetableMutation = useAddTimetable();
   
   const [stopSuggestions, setStopSuggestions] = useState<StopSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -41,12 +43,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   const busInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Check timetable limit on component load
+  // Check timetable limit
   useEffect(() => {
     if (projectId) {
-      checkTimetableLimit();
+      setUserCanAddTimetable(timetablePages.length < 3);
     }
-  }, [projectId, timetablePages]);
+  }, [projectId, timetablePages.length]);
   
   // Auto-update effect - update 2 seconds after last filter change
   useEffect(() => {
@@ -81,20 +83,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
     };
   }, []);
 
-  const checkTimetableLimit = async () => {
-    try {
-      const { data: userProfile } = await ProjectService.getUserPermissions();
-      
-      if (timetablePages.length >= 3) {
-        setUserCanAddTimetable(false);
-      } else {
-        setUserCanAddTimetable(true);
-      }
-    } catch (error) {
-      console.error('Error checking timetable limit:', error);
-    }
-  };
-
   // Handle search input changes
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -118,7 +106,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
   const handleStopSelection = async (stop: StopSuggestion) => {
     setSearchInput(stop.label);
     setShowSuggestions(false);
-    setSearchTerm(stop.label);
     
     const targetPage = selectedTimetable || (timetablePages.length > 0 ? timetablePages[timetablePages.length - 1].id : null);
     
@@ -154,11 +141,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       updateFilteredData(targetPage, scheduleData);
       
       if (projectId) {
-        // Update in database if we're in a project
-        await ProjectService.updateTimetable(targetPage, {
-          stopName: stop.label,
-          stopId: stop.id || '',
-          data: scheduleData
+        // Update in database
+        await updateTimetableMutation({
+          timetableId: targetPage,
+          updates: {
+            stopName: stop.label,
+            stopId: stop.id || '',
+            data: scheduleData
+          }
         });
       }
     } catch (error) {
@@ -237,9 +227,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
       updateFilteredData(selectedTimetable, scheduleData);
 
       if (projectId) {
-        // Update in database if we're in a project
-        await ProjectService.updateTimetable(selectedTimetable, {
-          data: scheduleData
+        // Update in database
+        await updateTimetableMutation({
+          timetableId: selectedTimetable,
+          updates: {
+            data: scheduleData
+          }
         });
       }
     } catch (error) {
@@ -267,10 +260,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({ projectId }) => {
         };
         
         // First create the timetable in the database
-        const savedTimetable = await ProjectService.addTimetable(projectId, newPage);
+        const savedTimetable = await addTimetableMutation({
+          projectId,
+          timetable: newPage
+        });
         
         if (savedTimetable) {
-          // Then add the timetable to the UI with the database UUID
+          // Then add the timetable to the UI with the database ID
           addTimetablePage({
             id: savedTimetable.id,
             stopName: savedTimetable.stopName,

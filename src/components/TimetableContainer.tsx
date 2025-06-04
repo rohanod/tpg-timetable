@@ -3,9 +3,9 @@ import { TimetablePage } from './TimetablePage';
 import { useAppContext } from '../contexts/AppContext';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { Plus } from 'lucide-react';
-import { ProjectService } from '../services/projects';
-import { toast } from 'react-hot-toast';
+import { useAddTimetable, useDeleteTimetable, useUpdateTimetable } from '../services/projects';
 import { Timetable } from '../types';
+import { toast } from 'react-hot-toast';
 
 interface TimetableContainerProps {
   setIsPrinting: (isPrinting: boolean) => void;
@@ -27,12 +27,16 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
     setTimetablePages
   } = useAppContext();
 
+  const addTimetableMutation = useAddTimetable();
+  const updateTimetableMutation = useUpdateTimetable();
+  const deleteTimetableMutation = useDeleteTimetable();
+
   // Load timetables from project if projectId is provided
   useEffect(() => {
     if (projectId && initialTimetables.length > 0) {
       // Convert database timetables to the format expected by the app
       const formattedTimetables = initialTimetables.map(t => ({
-        id: t.id,
+        id: t.id || t._id,
         stopName: t.stopName,
         stopId: t.stopId,
         theme: t.theme as 'color' | 'bw',
@@ -40,13 +44,13 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
       }));
       setTimetablePages(formattedTimetables);
     }
-  }, [projectId, initialTimetables]);
+  }, [projectId, initialTimetables, setTimetablePages]);
 
   const handleRemovePage = async (id: string) => {
     if (projectId) {
       try {
         // Delete from database first
-        await ProjectService.deleteTimetable(id);
+        await deleteTimetableMutation({ timetableId: id });
         // Then remove from UI if deletion was successful
         removeTimetablePage(id);
         toast.success('Timetable deleted');
@@ -84,11 +88,71 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
     
     if (projectId) {
       try {
-        await ProjectService.updateTimetable(id, { theme });
+        await updateTimetableMutation({
+          timetableId: id,
+          updates: { theme }
+        });
       } catch (error) {
         console.error('Error updating timetable theme:', error);
         toast.error('Failed to save theme preference');
       }
+    }
+  };
+
+  const handleNewPage = async () => {
+    if (projectId) {
+      try {
+        // Free users can only create up to 3 timetables per project
+        if (timetablePages.length >= 3) {
+          toast.error('You can only create up to 3 timetables per project');
+          return;
+        }
+
+        // For projects, create a new empty timetable
+        const newPage = {
+          stopName: 'Select a stop...',
+          stopId: '',
+          theme: 'color' as const,
+          data: []
+        };
+        
+        // Create the timetable in the database
+        const result = await addTimetableMutation({
+          projectId,
+          timetable: newPage
+        });
+        
+        if (result) {
+          // Add the timetable to the UI with the database ID
+          addTimetablePage({
+            id: result.id,
+            stopName: result.stopName,
+            stopId: result.stopId,
+            theme: result.theme as 'color' | 'bw',
+            data: result.data || []
+          });
+          toast.success('New timetable created');
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to create timetable');
+      }
+    } else {
+      // For standalone mode, create a demo timetable
+      const demoData = [
+        { time: '09:05', busNumber: '12', destination: 'Central Station' },
+        { time: '09:15', busNumber: '7', destination: 'City Hall' },
+        { time: '09:25', busNumber: '12', destination: 'Central Station' },
+        { time: '09:30', busNumber: '15', destination: 'University' },
+        { time: '09:45', busNumber: '7', destination: 'City Hall' }
+      ];
+      
+      addTimetablePage({
+        id: `temp-${Date.now()}`,
+        stopName: 'Demo Stop',
+        stopId: 'demo',
+        theme: 'color',
+        data: demoData
+      });
     }
   };
 
@@ -98,7 +162,7 @@ export const TimetableContainer: React.FC<TimetableContainerProps> = ({
         <div className="flex flex-col items-center justify-center h-full text-gray-500">
           <p className="mb-4">No timetables yet</p>
           <button
-            onClick={() => addTimetablePage()}
+            onClick={handleNewPage}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md flex items-center gap-2 transition-colors"
             data-testid="add-first-timetable"
           >

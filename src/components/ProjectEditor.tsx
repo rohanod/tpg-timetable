@@ -3,25 +3,36 @@ import { useParams } from 'react-router-dom';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { TimetableContainer } from './TimetableContainer';
 import { Toolbar } from './Toolbar';
-import { ProjectService } from '../services/projects';
-import { Project, UserProfile, Timetable } from '../types';
-import { AuthService } from '../services/auth';
+import { useGetProject, useGetTimetables } from '../services/projects';
 import { AppProvider } from '../contexts/AppContext';
 import { PrintArea } from './PrintArea';
 import { toast } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useStoreUserEffect } from '../services/auth';
+import { useConvexAuth } from 'convex/react';
 
 export const ProjectEditor: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<Project | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { projectId = "" } = useParams<{ projectId: string }>();
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const userStatus = useStoreUserEffect();
+  
+  const project = useGetProject(projectId);
+  const timetables = useGetTimetables(projectId);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isPrinting, setIsPrinting] = useState(false);
-  const [timetables, setTimetables] = useState<Timetable[]>([]);
 
   useEffect(() => {
-    loadProjectData();
+    // Update loading state based on auth and data loading
+    setIsLoading(authLoading || userStatus.isLoading || project === undefined || timetables === undefined);
     
+    // Redirect if not authenticated
+    if (!authLoading && !userStatus.isLoading && !userStatus.isAuthenticated) {
+      window.location.href = '/';
+    }
+  }, [authLoading, userStatus, project, timetables]);
+
+  useEffect(() => {
     // Set up print listeners
     window.addEventListener('beforeprint', () => setIsPrinting(true));
     window.addEventListener('afterprint', () => setIsPrinting(false));
@@ -30,53 +41,19 @@ export const ProjectEditor: React.FC = () => {
       window.removeEventListener('beforeprint', () => setIsPrinting(true));
       window.removeEventListener('afterprint', () => setIsPrinting(false));
     };
-  }, [projectId]);
-
-  const loadProjectData = async () => {
-    if (!projectId) {
-      toast.error('No project specified');
-      window.location.href = '/dashboard';
-      return;
-    }
-
-    try {
-      const isAuth = await AuthService.isAuthenticated();
-      if (!isAuth) {
-        window.location.href = '/';
-        return;
-      }
-
-      const [projectData, profile, timetablesData] = await Promise.all([
-        ProjectService.getProject(projectId),
-        AuthService.getUserProfile(),
-        ProjectService.getTimetables(projectId)
-      ]);
-      
-      setProject(projectData);
-      setUserProfile(profile);
-      setTimetables(timetablesData);
-    } catch (error) {
-      console.error('Error loading project:', error);
-      toast.error('Failed to load project');
-      
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50\" role="status">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500\" data-testid="project-loading"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50" role="status">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" data-testid="project-loading"></div>
       </div>
     );
   }
 
   if (!project) {
+    toast.error('Project not found');
+    window.location.href = '/dashboard';
     return null;
   }
 
@@ -115,15 +92,7 @@ export const ProjectEditor: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  {userProfile?.is_premium ? (
-                    <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs px-2.5 py-1 rounded-full">
-                      Premium
-                    </span>
-                  ) : (
-                    <span className="bg-gray-200 text-gray-800 text-xs px-2.5 py-1 rounded-full">
-                      Free
-                    </span>
-                  )}
+                  {/* Premium badge would be shown here if we had that data */}
                   <a
                     href="/dashboard"
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -141,7 +110,7 @@ export const ProjectEditor: React.FC = () => {
             <TimetableContainer 
               setIsPrinting={setIsPrinting} 
               projectId={projectId}
-              initialTimetables={timetables}
+              initialTimetables={timetables || []}
             />
           </div>
           
