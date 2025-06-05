@@ -29,10 +29,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       domain={auth0Domain}
       clientId={auth0ClientId}
       authorizationParams={{
-        redirect_uri: window.location.origin + '/',
+        redirect_uri: window.location.origin,
       }}
       useRefreshTokens={true}
-      cacheLocation="localstorage"
+      cacheLocation="localstorage" 
+      onRedirectCallback={(appState) => {
+        window.location.href = '/dashboard';
+      }}
     >
       <ConvexProviderWithAuth0 client={convex}>
         <App />
