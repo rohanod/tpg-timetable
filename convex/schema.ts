@@ -5,7 +5,7 @@ export default defineSchema({
   users: defineTable({
     name: v.string(),
     email: v.string(),
-    is_premium: v.boolean().default(false),
+    is_premium: v.boolean().withDefault(false),
     avatarUrl: v.optional(v.string())
   }).index("by_email", ["email"]),
   
