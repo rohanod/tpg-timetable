@@ -1,7 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { api } from "../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 
 // Replacement for AuthService
 export const AuthService = {
