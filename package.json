@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.2.4",
     "axios": "^1.6.7",
     "convex": "^1.10.0",
     "html2canvas": "^1.4.1",
