@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { Auth0Provider } from '@auth0/auth0-react';
+import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
 import { ConvexReactClient } from 'convex/react';
 
@@ -34,7 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       useRefreshTokens={true}
       cacheLocation="localstorage"
     >
-      <ConvexProviderWithAuth0 client={convex} useAuth={useAuth0}>
+      <ConvexProviderWithAuth0 client={convex}>
         <App />
       </ConvexProviderWithAuth0>
     </Auth0Provider>
