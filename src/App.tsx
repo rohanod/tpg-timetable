@@ -74,7 +74,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
             <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard\" replace />} />
+            <Route path="*\" element={<Navigate to="/dashboard\" replace />} />
           </Routes>
         </Authenticated>
 
