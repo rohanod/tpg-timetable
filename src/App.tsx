@@ -51,11 +51,8 @@ function App() {
                   <p className="text-gray-600 mb-6">
                     Create beautiful, printable timetables for bus and tram stops. Sign in to get started.
                   </p>
-                  <div className="flex flex-col space-y-4">
-                    <AuthModal />
-                    <div className="text-sm text-gray-500">
-                      Create up to 1 project with up to 3 timetables.
-                    </div>
+                  <div className="text-sm text-gray-500">
+                    Create up to 1 project with up to 3 timetables.
                   </div>
                 </div>
               </div>

@@ -29,7 +29,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       domain={auth0Domain}
       clientId={auth0ClientId}
       authorizationParams={{
-        redirect_uri: window.location.origin, // This ensures correct redirect URLs
+        redirect_uri: window.location.origin + '/',
       }}
       useRefreshTokens={true}
       cacheLocation="localstorage"
