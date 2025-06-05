@@ -17,13 +17,6 @@ function App() {
   const { isLoading } = useConvexAuth();
   const userStatus = useStoreUserEffect();
 
-  // Ensure we redirect to dashboard when authenticated
-  useEffect(() => {
-    if (!isLoading && !userStatus.isLoading && userStatus.isAuthenticated) {
-      window.location.href = '/dashboard';
-    }
-  }, [isLoading, userStatus]);
-
   if (isLoading || userStatus.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white" role="status">
@@ -71,10 +64,9 @@ function App() {
 
         <Authenticated>
           <Routes>
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
-            <Route path="/" element={<Navigate to="/dashboard\" replace />} />
-            <Route path="*\" element={<Navigate to="/dashboard\" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Authenticated>
 

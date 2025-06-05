@@ -31,11 +31,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       authorizationParams={{
         redirect_uri: window.location.origin,
       }}
-      useRefreshTokens={true}
-      cacheLocation="localstorage" 
-      onRedirectCallback={(appState) => {
-        window.location.href = '/dashboard';
-      }}
+      useRefreshTokens
+      cacheLocation="localstorage"
     >
       <ConvexProviderWithAuth0 client={convex}>
         <App />
