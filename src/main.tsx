@@ -1,27 +1,24 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { Auth0Provider } from '@auth0/auth0-react';
 import { ConvexProviderWithAuth0 } from "convex/react-auth0";
-import { Auth0Provider } from "@auth0/auth0-react";
 
-// Initialize Convex client
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
+const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
+const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+
 const convex = new ConvexReactClient(convexUrl);
 
-// Initialize Auth0 Provider settings
-const domain = import.meta.env.VITE_AUTH0_DOMAIN;
-const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-const redirectUri = window.location.origin;
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
     <Auth0Provider
-      domain={domain}
-      clientId={clientId}
+      domain={auth0Domain}
+      clientId={auth0ClientId}
       authorizationParams={{
-        redirect_uri: redirectUri,
+        redirect_uri: window.location.origin
       }}
       useRefreshTokens={true}
       cacheLocation="localstorage"
@@ -30,5 +27,5 @@ createRoot(document.getElementById('root')!).render(
         <App />
       </ConvexProviderWithAuth0>
     </Auth0Provider>
-  </StrictMode>
+  </React.StrictMode>,
 );
