@@ -65,6 +65,8 @@ export function useStoreUserEffect() {
         .catch((error) => {
           console.error("Failed to store user:", error);
         });
+    } else {
+      setUserStored(false);
     }
   }, [isAuthenticated, storeUser]);
 

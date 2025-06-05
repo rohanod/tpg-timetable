@@ -11,9 +11,14 @@ export const getCurrentUser = query({
       return null;
     }
     
+    // Ensure email exists before using it for lookup
+    if (!identity.email) {
+      return null;
+    }
+    
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_email", (q) => q.eq("email", identity.email))
       .first();
       
     return user;
@@ -28,10 +33,15 @@ export const storeUser = mutation({
     if (!identity) {
       throw new ConvexError("Not authenticated");
     }
+
+    // Ensure email exists
+    if (!identity.email) {
+      throw new ConvexError("User email is missing");
+    }
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_email", (q) => q.eq("email", identity.email))
       .first();
     
     if (user) {
@@ -47,9 +57,9 @@ export const storeUser = mutation({
     // Create a new user
     return await ctx.db.insert("users", {
       name: identity.name || "Anonymous",
-      email: identity.email!,
+      email: identity.email,
       is_premium: false,
-      created_at: Date.now()
+      avatarUrl: identity.pictureUrl
     });
   }
 });
