@@ -19,7 +19,7 @@ export const AuthCallback = () => {
         if (data?.session) {
           // Redirect to dashboard after successful authentication
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            window.location.href = '/';
           }, 500);
         } else {
           // If no session was established, redirect back to home

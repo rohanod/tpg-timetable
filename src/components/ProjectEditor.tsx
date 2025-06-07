@@ -53,7 +53,7 @@ export const ProjectEditor: React.FC = () => {
 
   if (!project) {
     toast.error('Project not found');
-    window.location.href = '/dashboard';
+    window.location.href = '/';
     return null;
   }
 
@@ -64,7 +64,7 @@ export const ProjectEditor: React.FC = () => {
           <h2 className="text-xl font-bold mb-4 text-red-600">Error</h2>
           <p className="text-gray-700 mb-4">An error occurred while loading the project editor</p>
           <button
-            onClick={() => window.location.href = '/dashboard'}
+            onClick={() => window.location.href = '/'}
             className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
           >
             Return to Dashboard
@@ -79,7 +79,7 @@ export const ProjectEditor: React.FC = () => {
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center gap-4">
                   <a
-                    href="/dashboard"
+                    href="/"
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                     title="Back to Dashboard"
                     aria-label="Back to Dashboard"
@@ -94,7 +94,7 @@ export const ProjectEditor: React.FC = () => {
                 <div className="flex items-center gap-3">
                   {/* Premium badge would be shown here if we had that data */}
                   <a
-                    href="/dashboard"
+                    href="/"
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                   >
                     <Settings size={18} />
