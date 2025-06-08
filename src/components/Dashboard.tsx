@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, LogOut, Calendar } from 'lucide-react';
 import { useGetProjects, useCreateProject, useDeleteProject } from '../services/projects';
-import { Project } from '../types';
 import { useAuth0 } from '@auth0/auth0-react';
 import { toast } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -18,17 +17,12 @@ export const Dashboard: React.FC = () => {
   const deleteProject = useDeleteProject();
   
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState('');
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
 
   useEffect(() => {
     // Update loading state based on both auth and projects data
     setIsLoading(authLoading || userStatus.isLoading || projects === undefined);
-    
-    if (!authLoading && !userStatus.isLoading && !userStatus.isAuthenticated) {
-      window.location.href = '/';
-    }
   }, [authLoading, userStatus, projects]);
 
   const handleCreateProject = async () => {
@@ -74,28 +68,6 @@ export const Dashboard: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white" role="status">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" data-testid="dashboard-loader"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center" role="alert">
-          <h2 className="text-xl font-bold mb-4 text-red-600">Error Loading Dashboard</h2>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <button
-            onClick={() => {
-              setIsLoading(true);
-              setError(null);
-              // Reload page as simplest way to retry
-              window.location.reload();
-            }}
-            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
-          >
-            Retry
-          </button>
-        </div>
       </div>
     );
   }

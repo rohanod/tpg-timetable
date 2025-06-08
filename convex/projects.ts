@@ -33,7 +33,7 @@ export const getProjects = query({
 
 // Get a specific project by ID
 export const getProject = query({
-  args: { projectId: v.string() },
+  args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -107,7 +107,7 @@ export const createProject = mutation({
 
 // Delete a project
 export const deleteProject = mutation({
-  args: { projectId: v.string() },
+  args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -132,7 +132,7 @@ export const deleteProject = mutation({
     // Delete all timetables associated with this project
     const timetables = await ctx.db
       .query("timetables")
-      .withIndex("by_project", (q) => q.eq("project_id", args.projectId))
+      .withIndex("by_project", (q) => q.eq("project_id", project._id))
       .collect();
     
     for (const timetable of timetables) {
@@ -140,7 +140,7 @@ export const deleteProject = mutation({
     }
     
     // Delete the project itself
-    await ctx.db.delete(args.projectId);
+    await ctx.db.delete(project._id);
   }
 });
 

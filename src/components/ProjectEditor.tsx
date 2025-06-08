@@ -25,11 +25,6 @@ export const ProjectEditor: React.FC = () => {
   useEffect(() => {
     // Update loading state based on auth and data loading
     setIsLoading(authLoading || userStatus.isLoading || project === undefined || timetables === undefined);
-    
-    // Redirect if not authenticated
-    if (!authLoading && !userStatus.isLoading && !userStatus.isAuthenticated) {
-      window.location.href = '/';
-    }
   }, [authLoading, userStatus, project, timetables]);
 
   useEffect(() => {
@@ -52,9 +47,20 @@ export const ProjectEditor: React.FC = () => {
   }
 
   if (!project) {
-    toast.error('Project not found');
-    window.location.href = '/';
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+          <h2 className="text-xl font-bold mb-4 text-red-600">Project Not Found</h2>
+          <p className="text-gray-700 mb-4">The project you're looking for doesn't exist or you don't have access to it.</p>
+          <a
+            href="/"
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors inline-block"
+          >
+            Return to Dashboard
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (

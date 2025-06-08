@@ -64,7 +64,7 @@ export function useGetProjects() {
 }
 
 export function useGetProject(projectId: string) {
-  return useQuery(api.projects.getProject, { projectId });
+  return useQuery(api.projects.getProject, projectId ? { projectId: projectId as any } : "skip");
 }
 
 export function useGetUserPermissions() {
@@ -80,7 +80,7 @@ export function useDeleteProject() {
 }
 
 export function useGetTimetables(projectId: string) {
-  return useQuery(api.timetables.getTimetables, { projectId });
+  return useQuery(api.timetables.getTimetables, projectId ? { projectId: projectId as any } : "skip");
 }
 
 export function useAddTimetable() {

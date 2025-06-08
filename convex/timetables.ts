@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 // Get all timetables for a project
 export const getTimetables = query({
-  args: { projectId: v.string() },
+  args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -27,7 +27,7 @@ export const getTimetables = query({
     
     const timetables = await ctx.db
       .query("timetables")
-      .withIndex("by_project", (q) => q.eq("project_id", args.projectId))
+      .withIndex("by_project", (q) => q.eq("project_id", project._id))
       .collect();
     
     return timetables.map(timetable => ({
@@ -40,7 +40,7 @@ export const getTimetables = query({
 // Add a new timetable to a project
 export const addTimetable = mutation({
   args: {
-    projectId: v.string(),
+    projectId: v.id("projects"),
     timetable: v.object({
       stopName: v.string(),
       stopId: v.string(),
@@ -72,7 +72,7 @@ export const addTimetable = mutation({
     // Check timetable limit (free users can only have 3 timetables per project)
     const existingTimetables = await ctx.db
       .query("timetables")
-      .withIndex("by_project", (q) => q.eq("project_id", args.projectId))
+      .withIndex("by_project", (q) => q.eq("project_id", project._id))
       .collect();
     
     if (existingTimetables.length >= 3 && !user.is_premium) {
@@ -80,7 +80,7 @@ export const addTimetable = mutation({
     }
     
     const timetableId = await ctx.db.insert("timetables", {
-      project_id: args.projectId,
+      project_id: project._id,
       stopName: args.timetable.stopName,
       stopId: args.timetable.stopId,
       theme: args.timetable.theme,
@@ -99,7 +99,7 @@ export const addTimetable = mutation({
 // Update a timetable
 export const updateTimetable = mutation({
   args: {
-    timetableId: v.string(),
+    timetableId: v.id("timetables"),
     updates: v.object({
       stopName: v.optional(v.string()),
       stopId: v.optional(v.string()),
@@ -139,7 +139,7 @@ export const updateTimetable = mutation({
 
 // Delete a timetable
 export const deleteTimetable = mutation({
-  args: { timetableId: v.string() },
+  args: { timetableId: v.id("timetables") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

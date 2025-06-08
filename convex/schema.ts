@@ -11,12 +11,12 @@ export default defineSchema({
   
   projects: defineTable({
     name: v.string(),
-    user_id: v.string(),
+    user_id: v.id("users"),
     created_at: v.number()
   }).index("by_user", ["user_id"]),
   
   timetables: defineTable({
-    project_id: v.string(),
+    project_id: v.id("projects"),
     stopName: v.string(),
     stopId: v.string(),
     theme: v.string(),
