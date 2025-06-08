@@ -1,29 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2, LogOut, Calendar } from 'lucide-react';
 import { useGetProjects, useCreateProject, useDeleteProject } from '../services/projects';
 import { useAuth0 } from '@auth0/auth0-react';
 import { toast } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useStoreUserEffect } from '../services/auth';
-import { useConvexAuth } from 'convex/react';
 
 export const Dashboard: React.FC = () => {
   const { logout } = useAuth0();
-  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
-  const userStatus = useStoreUserEffect();
+  const { isLoading: authLoading, isAuthenticated } = useStoreUserEffect();
   
   const projects = useGetProjects();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
   
-  const [isLoading, setIsLoading] = useState(true);
   const [newProjectName, setNewProjectName] = useState('');
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
-
-  useEffect(() => {
-    // Update loading state based on both auth and projects data
-    setIsLoading(authLoading || userStatus.isLoading || projects === undefined);
-  }, [authLoading, userStatus, projects]);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) {
@@ -32,12 +25,16 @@ export const Dashboard: React.FC = () => {
     }
 
     try {
+      setIsCreatingProject(true);
       await createProject({ name: newProjectName });
       setNewProjectName('');
       setShowNewProjectDialog(false);
       toast.success('Project created successfully');
     } catch (error: any) {
+      console.error('Create project error:', error);
       toast.error(error.message || 'Failed to create project');
+    } finally {
+      setIsCreatingProject(false);
     }
   };
 
@@ -45,9 +42,10 @@ export const Dashboard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
 
     try {
-      await deleteProject({ projectId });
+      await deleteProject({ projectId: projectId as any });
       toast.success('Project deleted successfully');
     } catch (error: any) {
+      console.error('Delete project error:', error);
       toast.error(error.message || 'Failed to delete project');
     }
   };
@@ -64,10 +62,23 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white" role="status">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" data-testid="dashboard-loader"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4" data-testid="dashboard-loader"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-gray-600">Please sign in to access the dashboard.</p>
+        </div>
       </div>
     );
   }
@@ -145,7 +156,11 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {Array.isArray(projects) && projects.length === 0 ? (
+          {projects === undefined ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+          ) : Array.isArray(projects) && projects.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
                 <Calendar className="h-6 w-6 text-orange-600" />
@@ -219,15 +234,17 @@ export const Dashboard: React.FC = () => {
                   <button
                     onClick={() => setShowNewProjectDialog(false)}
                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                    disabled={isCreatingProject}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateProject}
-                    className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                    disabled={isCreatingProject}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     data-testid="create-project-submit"
                   >
-                    Create Project
+                    {isCreatingProject ? 'Creating...' : 'Create Project'}
                   </button>
                 </div>
               </div>

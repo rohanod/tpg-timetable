@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Calendar } from 'lucide-react';
@@ -14,13 +14,17 @@ import { useStoreUserEffect } from './services/auth';
 import { Authenticated, Unauthenticated } from 'convex/react';
 
 function App() {
-  const { isLoading } = useConvexAuth();
-  const userStatus = useStoreUserEffect();
+  const { isLoading: convexLoading } = useConvexAuth();
+  const { isLoading: userLoading, isAuthenticated } = useStoreUserEffect();
 
-  if (isLoading || userStatus.isLoading) {
+  // Show loading while authentication is being established
+  if (convexLoading || userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white" role="status">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" data-testid="loading-spinner"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4" data-testid="loading-spinner"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -58,7 +62,7 @@ function App() {
                 </div>
               </div>
             } />
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Unauthenticated>
 
@@ -66,7 +70,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Authenticated>
 

@@ -9,23 +9,15 @@ import { PrintArea } from './PrintArea';
 import { toast } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useStoreUserEffect } from '../services/auth';
-import { useConvexAuth } from 'convex/react';
 
 export const ProjectEditor: React.FC = () => {
   const { projectId = "" } = useParams<{ projectId: string }>();
-  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
-  const userStatus = useStoreUserEffect();
+  const { isLoading: authLoading, isAuthenticated } = useStoreUserEffect();
   
   const project = useGetProject(projectId);
   const timetables = useGetTimetables(projectId);
   
-  const [isLoading, setIsLoading] = useState(true);
   const [isPrinting, setIsPrinting] = useState(false);
-
-  useEffect(() => {
-    // Update loading state based on auth and data loading
-    setIsLoading(authLoading || userStatus.isLoading || project === undefined || timetables === undefined);
-  }, [authLoading, userStatus, project, timetables]);
 
   useEffect(() => {
     // Set up print listeners
@@ -38,10 +30,41 @@ export const ProjectEditor: React.FC = () => {
     };
   }, []);
 
-  if (isLoading) {
+  if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50\" role="status">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500\" data-testid="project-loading"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50" role="status">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4" data-testid="project-loading"></div>
+          <p className="text-gray-600">Loading project...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+          <h2 className="text-xl font-bold mb-4 text-red-600">Access Denied</h2>
+          <p className="text-gray-700 mb-4">Please sign in to access this project.</p>
+          <a
+            href="/"
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors inline-block"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (project === undefined || timetables === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50" role="status">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading project data...</p>
+        </div>
       </div>
     );
   }
@@ -98,7 +121,6 @@ export const ProjectEditor: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  {/* Premium badge would be shown here if we had that data */}
                   <a
                     href="/"
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"

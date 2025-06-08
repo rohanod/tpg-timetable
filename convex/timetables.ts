@@ -12,7 +12,7 @@ export const getTimetables = query({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user) {
@@ -56,7 +56,7 @@ export const addTimetable = mutation({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user) {
@@ -126,7 +126,7 @@ export const updateTimetable = mutation({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user || project.user_id !== user._id) {
@@ -159,7 +159,7 @@ export const deleteTimetable = mutation({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user || project.user_id !== user._id) {

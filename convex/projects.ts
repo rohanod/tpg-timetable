@@ -12,7 +12,7 @@ export const getProjects = query({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user) {
@@ -42,7 +42,7 @@ export const getProject = query({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user) {
@@ -52,7 +52,7 @@ export const getProject = query({
     const project = await ctx.db.get(args.projectId);
     
     if (!project || project.user_id !== user._id) {
-      throw new ConvexError("Project not found");
+      throw new ConvexError("Project not found or access denied");
     }
     
     return {
@@ -73,7 +73,7 @@ export const createProject = mutation({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user) {
@@ -116,7 +116,7 @@ export const deleteProject = mutation({
     
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
     if (!user) {
@@ -141,30 +141,5 @@ export const deleteProject = mutation({
     
     // Delete the project itself
     await ctx.db.delete(project._id);
-  }
-});
-
-export const getUserPermissions = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("Not authenticated");
-    }
-    
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
-      .first();
-    
-    if (!user) {
-      throw new ConvexError("User not found");
-    }
-    
-    return { data: {
-      id: user._id,
-      is_premium: user.is_premium,
-      created_at: new Date(user._creationTime).toISOString()
-    }};
   }
 });
