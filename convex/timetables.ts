@@ -54,10 +54,19 @@ export const addTimetable = mutation({
       throw new ConvexError("Not authenticated");
     }
     
-    const user = await ctx.db
+    // First try by tokenIdentifier
+    let user = await ctx.db
       .query("users")
       .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
+    
+    // Fallback to email lookup for migration
+    if (!user && identity.email) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", identity.email))
+        .first();
+    }
     
     if (!user) {
       throw new ConvexError("User not found");
