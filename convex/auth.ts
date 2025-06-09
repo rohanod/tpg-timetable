@@ -10,11 +10,28 @@ export const getCurrentUser = query({
       return null;
     }
     
-    // Look up user by Auth0 subject ID
-    const user = await ctx.db
+    // First try to find by tokenIdentifier
+    let user = await ctx.db
       .query("users")
       .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
+    
+    // If not found and we have an email, try to find by email (for migration)
+    if (!user && identity.email) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", identity.email))
+        .first();
+      
+      // If found by email but missing tokenIdentifier, update it
+      if (user && !user.tokenIdentifier) {
+        await ctx.db.patch(user._id, {
+          tokenIdentifier: identity.tokenIdentifier
+        });
+        // Refetch the updated user
+        user = await ctx.db.get(user._id);
+      }
+    }
       
     return user;
   }
@@ -29,15 +46,34 @@ export const storeUser = mutation({
       throw new ConvexError("Not authenticated");
     }
 
-    // Check if user already exists
-    const existingUser = await ctx.db
+    // Check if user already exists by tokenIdentifier
+    let existingUser = await ctx.db
       .query("users")
       .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .first();
     
+    // If not found by tokenIdentifier but we have email, check by email
+    if (!existingUser && identity.email) {
+      existingUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", identity.email))
+        .first();
+      
+      // If found by email, update with tokenIdentifier
+      if (existingUser) {
+        await ctx.db.patch(existingUser._id, {
+          tokenIdentifier: identity.tokenIdentifier,
+          name: identity.name || existingUser.name,
+          avatarUrl: identity.pictureUrl || existingUser.avatarUrl
+        });
+        return existingUser._id;
+      }
+    }
+    
     if (existingUser) {
       // Update existing user with latest info
       await ctx.db.patch(existingUser._id, {
+        tokenIdentifier: identity.tokenIdentifier,
         name: identity.name || "Anonymous",
         email: identity.email || "",
         avatarUrl: identity.pictureUrl
