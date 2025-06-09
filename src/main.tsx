@@ -1,42 +1,30 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
-import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
-import { ConvexProviderWithAuth0 } from 'convex/react-auth0';
-import { ConvexReactClient } from 'convex/react';
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
 
-const convexUrl = import.meta.env.VITE_CONVEX_URL;
-if (!convexUrl) {
-  throw new Error('VITE_CONVEX_URL is not defined. Check your .env file.');
-}
-
-const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
-if (!auth0Domain) {
-  throw new Error('VITE_AUTH0_DOMAIN is not defined. Check your .env file.');
-}
-
-const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-if (!auth0ClientId) {
-  throw new Error('VITE_AUTH0_CLIENT_ID is not defined. Check your .env file.');
-}
-
-const convex = new ConvexReactClient(convexUrl as string);
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Auth0Provider
-      domain={auth0Domain}
-      clientId={auth0ClientId}
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-      }}
-      useRefreshTokens
-      cacheLocation="localstorage"
-    >
-      <ConvexProviderWithAuth0 client={convex}>
-        <App />
-      </ConvexProviderWithAuth0>
-    </Auth0Provider>
-  </React.StrictMode>,
-);
+export default defineSchema({
+  users: defineTable({
+    tokenIdentifier: v.optional(v.string()),
+    name: v.string(),
+    email: v.string(),
+    is_premium: v.optional(v.boolean()),
+    avatarUrl: v.optional(v.string())
+  })
+  .index("by_token_identifier", ["tokenIdentifier"])
+  .index("by_email", ["email"]),
+  
+  projects: defineTable({
+    name: v.string(),
+    user_id: v.id("users"),
+    created_at: v.number()
+  }).index("by_user", ["user_id"]),
+  
+  timetables: defineTable({
+    project_id: v.id("projects"),
+    stopName: v.string(),
+    stopId: v.string(),
+    theme: v.string(),
+    data: v.any(), // For the schedule data
+    created_at: v.number()
+  })
+  .index("by_project", ["project_id"])
+});
