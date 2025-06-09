@@ -62,15 +62,17 @@ function App() {
                 </div>
               </div>
             } />
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Unauthenticated>
 
         <Authenticated>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectEditor />} />
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Authenticated>
 

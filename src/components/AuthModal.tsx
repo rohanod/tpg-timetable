@@ -30,7 +30,7 @@ export const AuthModal: React.FC = () => {
 
   return (
     <button
-      onClick={() => loginWithRedirect()}
+      onClick={() => loginWithRedirect({ appState: { returnTo: '/dashboard' } })}
       className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
       aria-label="Sign In"
     >
