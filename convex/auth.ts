@@ -2,35 +2,6 @@ import { defineSchema, defineTable } from "convex/server";
 import { v, ConvexError } from "convex/values"; 
 import { mutation, query } from "./_generated/server";
 
-export default defineSchema({
-  users: defineTable({
-    tokenIdentifier: v.optional(v.string()),
-    name: v.string(),
-    email: v.string(),
-    is_premium: v.optional(v.boolean()),
-    avatarUrl: v.optional(v.string())
-  })
-  .index("by_token_identifier", ["tokenIdentifier"])
-  .index("by_email", ["email"]),
-  
-  projects: defineTable({
-    name: v.string(),
-    user_id: v.id("users"),
-    created_at: v.number()
-  }).index("by_user", ["user_id"]),
-  
-  timetables: defineTable({
-    project_id: v.id("projects"),
-    stopName: v.string(),
-    stopId: v.string(),
-    theme: v.string(),
-    data: v.any(), // For the schedule data
-    created_at: v.number()
-  })
-  .index("by_project", ["project_id"])
-});
-
-// Store user after Auth0 authentication
 export const storeUser = mutation({
   args: {},
   handler: async (ctx) => {
@@ -93,5 +64,42 @@ export const storeUser = mutation({
     });
     
     return userId;
+  }
+});
+
+// Get current user
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token_identifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .first();
+      
+    return user;
+  }
+});
+
+// Get user permissions
+export const getUserPermissions = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx, {});
+    if (!user) {
+      return { data: null };
+    }
+    
+    return { 
+      data: {
+        id: user._id,
+        is_premium: user.is_premium || false,
+        created_at: user._creationTime
+      }
+    };
   }
 });
