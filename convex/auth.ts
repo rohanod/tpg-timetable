@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v, ConvexError } from "convex/values"; 
-import { mutation, query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 
 export const storeUser = mutation({
   args: {},

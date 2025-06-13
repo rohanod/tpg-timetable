@@ -2,12 +2,14 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 
 // Custom hook to handle user storage and authentication state
 export function useStoreUserEffect() {
   const { isLoading: convexLoading, isAuthenticated: convexAuthenticated } = useConvexAuth();
   const { isAuthenticated: auth0Authenticated, user: auth0User } = useAuth0();
   const storeUser = useMutation(api.auth.storeUser);
+  const currentUser = useQuery(api.auth.getCurrentUser);
   const currentUser = useQuery(api.auth.getCurrentUser);
   
   const [isStoringUser, setIsStoringUser] = useState(false);
@@ -16,7 +18,13 @@ export function useStoreUserEffect() {
   useEffect(() => {
     const handleUserStorage = async () => {
       // Only proceed if Auth0 and Convex are both authenticated
-      if (!auth0Authenticated || !convexAuthenticated || isStoringUser || hasStoredUser) {
+      if (!auth0Authenticated || !convexAuthenticated || isStoringUser) {
+        return;
+      }
+
+      // If we already have a user in the database, no need to store again
+      if (currentUser) {
+        setHasStoredUser(true);
         return;
       }
 
@@ -43,12 +51,13 @@ export function useStoreUserEffect() {
     }
   }, [auth0Authenticated]);
 
-  const isLoading = convexLoading || isStoringUser || (convexAuthenticated && !currentUser && !isStoringUser);
-  const isAuthenticated = convexAuthenticated && hasStoredUser && !!currentUser;
+  const isLoading = convexLoading || isStoringUser;
+  const isAuthenticated = convexAuthenticated && (hasStoredUser || !!currentUser);
 
   return {
     isLoading,
     isAuthenticated,
+    user: currentUser
     user: currentUser
   };
 }

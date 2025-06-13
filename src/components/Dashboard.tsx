@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Calendar, Plus, Trash2 } from 'lucide-react';
 import { useCreateProject, useDeleteProject, useGetProjects } from '../services/projects';
 import { useUserPermissions } from '../services/auth';
@@ -19,13 +19,13 @@ export const Dashboard: React.FC = () => {
   
   useEffect(() => {
     // Check if user is authenticated
-    if (projects === undefined) {
+    if (projects === undefined && !error) {
       setIsLoading(true);
     } else {
       setIsLoading(false);
       setError(null);
     }
-  }, [projects]);
+  }, [projects, error]);
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +60,11 @@ export const Dashboard: React.FC = () => {
     setError(null);
     // The query will automatically re-run
   };
+
+  // If there's an authentication error, redirect to home
+  if (error && error.message?.includes("Not authenticated")) {
+    return <Navigate to="/" replace />;
+  }
 
   if (isLoading) {
     return (

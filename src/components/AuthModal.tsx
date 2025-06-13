@@ -1,8 +1,10 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { UserCircle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export const AuthModal: React.FC = () => {
   const { loginWithRedirect, isAuthenticated, user, logout } = useAuth0();
+  const location = useLocation();
 
   if (isAuthenticated && user) {
     return (
@@ -30,7 +32,7 @@ export const AuthModal: React.FC = () => {
 
   return (
     <button
-      onClick={() => loginWithRedirect({ appState: { returnTo: '/dashboard' } })}
+      onClick={() => loginWithRedirect()}
       className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
       aria-label="Sign In"
     >
