@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
+import { mutation } from "./_generated/server";
 
 export default defineSchema({
   users: defineTable({
